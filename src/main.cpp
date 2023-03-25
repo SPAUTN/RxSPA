@@ -20,10 +20,11 @@ void setup() {
 
 void loop() {
   if(!initialized) {
-    String resp0 = sendATCommand(AT_RESET);
-    String resp1 = sendATCommand(AT_P2P_CONFIG_SET);
-    String resp2 = sendATCommand(AT_P2P_CONFIG_GET);
-    String resp3 = sendATCommand(AT_CONTINUOUS_PRECV_CONFIG_SET);
+    // Responses stored in variables for debug and/or future validations
+    String atCommandResetResponse = sendATCommand(AT_RESET);
+    String atConfigSetP2PResponse = sendATCommand(AT_P2P_CONFIG_SET);
+    String atConfigGetP2PResponse = sendATCommand(AT_P2P_CONFIG_GET);
+    String atConfigContRecvResponse = sendATCommand(AT_CONTINUOUS_PRECV_CONFIG_SET);
     initialized = true;
     Serial1.flush();
     delay(1000);
@@ -32,14 +33,10 @@ void loop() {
     // Process received data
     if(Serial2.available()>0) {
       String rxData = readSerial2();
-      rxData = rxData.substring(rxData.lastIndexOf(':')+1);
       rxData.trim();
-      
+      rxData = hexToASCII(rxData.substring(rxData.lastIndexOf(':')+1));
       Serial.print("Received: ");
       Serial.println(rxData);
-      // Convert payload from hex to ascii
-      Serial.print("ASCII: ");
-      Serial.println(hexToASCII(rxData));
     }
   }
 }
