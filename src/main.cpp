@@ -1,16 +1,15 @@
 #include <Arduino.h>
 #include <WiFiManager.h>
 
+#define AT_RESET "ATZ"
 #define AT_P2P_CONFIG_SET "AT+P2P=915000000:7:0:0:10:14"
 #define AT_P2P_CONFIG_GET "AT+P2P=?"
-#define AT_CONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65534"
+#define AT_CONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65534" // 65534 for continuous receive, 65535 for continuous receive until one reception.
 #define AT_CONTINUOUS_PRECV_CONFIG_GET "AT+PRECV=?"
 
 bool initialized = false;
-String response = "";
-
 WiFiManager wifiManager;
-void sendATCommand(String);
+String sendATCommand(String);
 
 void setup() {
   Serial.begin(115200);
@@ -20,38 +19,38 @@ void setup() {
 
 void loop() {
   if(!initialized) {
-    delay(500);
-    Serial2.println();
-    sendATCommand(AT_P2P_CONFIG_SET);
-    sendATCommand(AT_P2P_CONFIG_GET);
-    sendATCommand(AT_CONTINUOUS_PRECV_CONFIG_SET);
+    String resp0 = sendATCommand(AT_RESET);
+    String resp1 = sendATCommand(AT_P2P_CONFIG_SET);
+    String resp2 = sendATCommand(AT_P2P_CONFIG_GET);
+    String resp3 = sendATCommand(AT_CONTINUOUS_PRECV_CONFIG_SET);
     initialized = true;
-    response = "";
     Serial1.flush();
+    delay(1000);
     return;
-  }
-  if(Serial2.available()>0) {
-    char c = Serial2.read();
-    Serial.print(c);
-    response += c;
-    return;
-  }
-  if(response.length() > 0) {
-    if(response.indexOf("OK") > -1) {
-      Serial.print("RESPONSE: ");
-      Serial.println(response);
-      Serial.println("-----------------");
-    } else {
-      Serial.println("RESPONSE: ERROR");
-    }
-    response = "";
+  } else {
+    // Process received data
   }
 }
 
-void sendATCommand(String command) {
+String sendATCommand(String command) {
+  String response = "";
+  bool configCommand = command.indexOf('?') == -1;
+  if(configCommand) {
+    delay(1000);
+  }
   Serial2.flush();
   Serial2.println();
   Serial2.println(command);
   delay(500);
   Serial2.flush();
+  while(Serial2.available()>0) {
+    char c = Serial2.read();
+    Serial.print(c);
+    response += c;
+  }
+  if( !configCommand ) {
+    response = response.substring(0, response.indexOf('\r'));
+  }
+  response.trim();
+  return response;
 }
