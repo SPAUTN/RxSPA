@@ -7,11 +7,8 @@ void setup() {
 
 void loop() {
   if(Serial.available()) {
-    char c = Serial.read();
-    Serial1.println(c);
-  }
-  if(Serial1.available()) {
-    char c = Serial1.read();
-    Serial.println(c);
+    String s = Serial.readString();
+    Serial.print("String received: ");
+    Serial.println(s);
   }
 }
