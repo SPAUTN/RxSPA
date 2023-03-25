@@ -1,6 +1,6 @@
 # RxSPA
 Código receptor de tramas provenientes del módulo LoRa transmisor.
-Este código se ejecuta en un microcontrolador ESP8266.
+Este código se ejecuta en un microcontrolador ESP32.
 
 # Objetivos
 - [x] Recibir las tramas hexadecimales y convertirlas a ASCII
