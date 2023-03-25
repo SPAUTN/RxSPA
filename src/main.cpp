@@ -7,7 +7,6 @@ String response = "";
 
 WiFiManager wifiManager;
 
-
 void setup() {
   Serial.begin(115200);
   Serial2.begin(115200);
@@ -15,14 +14,12 @@ void setup() {
 }
 
 void loop() {
-
   if(!initialized) {
     delay(500);
     Serial2.println(AT_P2P_CONFIG);
     initialized = true;
     return;
   }
-
   if(Serial2.available()>0) {
     char c = Serial2.read();
     Serial.print(c);
