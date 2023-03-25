@@ -1,13 +1,17 @@
 #include <Arduino.h>
+#include <WiFiManager.h>
 
 #define AT_P2P_CONFIG "AT+P2P=915000000:7:0:0:10:14"
 bool initialized = false;
-
 String response = "";
+
+WiFiManager wifiManager;
+
 
 void setup() {
   Serial.begin(115200);
   Serial2.begin(115200);
+  wifiManager.autoConnect();
 }
 
 void loop() {
