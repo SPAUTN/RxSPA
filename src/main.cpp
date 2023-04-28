@@ -76,7 +76,10 @@ void loop() {
   //ParseData
 
   // SendData
-  int httpResponseCode = parseRxData(windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, pluviometer, weight);
+  //int httpResponseCode = parseRxData(windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, pluviometer, weight);
+  
+  // Get httpResponseCode and make decision
+  
   // Only for Test
   // Serial.print("RESPONSE: ");
   // Serial.println(parseRxData(esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100));
