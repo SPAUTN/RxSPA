@@ -3,6 +3,7 @@
 #include <NTPClient.h>
 #include <HTTPClient.h>
 #include <Utils.h>
+#include <esp_sntp.h>
 #include <esp_random.h>
 
 #define AT_CONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65534" // 65534 for continuous receive, 65535 for continuous receive until one reception.
@@ -102,34 +103,47 @@ void loop() {
   // Only for Test -- Send only once per hour
   int httpResponse;
   String currentTime = getLocalTimeStamp(timeClient);
+  Serial.print("Current time: ");
+  Serial.println(currentTime);
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
 
-  if(minutes % 2 == 0 && sendedMinutes != minutes) {
-    do {
-      httpResponse = parseRxData(esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100);
-      // Serial.print("RESPONSE: ");
-      // Serial.println(httpResponse);
-      // Serial.print("TIME: ");
-      // Serial.print(currentTime);
+  if(minutes % 2 == 0) {
+    if(sendedMinutes != minutes){
+      Serial.println("Preparando datos para transmisión.");
+      do {
+        httpResponse = parseRxData(esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100);
+        // Serial.print("RESPONSE: ");
+        // Serial.println(httpResponse);
+        // Serial.print("TIME: ");
+        // Serial.print(currentTime);
 
-      // log table writing
-      logWrite(currentTime, httpResponse);
-      // Serial.print("Last sendedHour: ");
-      // Serial.println(sendedHour);
-      
-      Serial.print("Last sendedMinutes: ");
-      Serial.println(sendedMinutes);
-      sendedHour = hour;
-      sendedMinutes = minutes;
-      Serial.print(currentTime);
-      Serial.print(" -> ");
-      Serial.println(httpResponse);
-      // Serial.print("New sendedHour: ");
-      // Serial.println(sendedHour);
-      
-      Serial.print("New sendedMinutes: ");
-      Serial.println(sendedMinutes);
-    } while (httpResponse != 200);
+        // log table writing
+        logWrite(currentTime, httpResponse);
+        // Serial.print("Last sendedHour: ");
+        // Serial.println(sendedHour);
+        
+        Serial.print("Last sendedMinutes: ");
+        Serial.println(sendedMinutes);
+        sendedHour = hour;
+        sendedMinutes = minutes;
+        Serial.print(currentTime);
+        Serial.print(" -> ");
+        Serial.println(httpResponse);
+        // Serial.print("New sendedHour: ");
+        // Serial.println(sendedHour);
+        
+        Serial.print("New sendedMinutes: ");
+        Serial.println(sendedMinutes);
+      } while (httpResponse != 200);
+    } else {
+        Serial.print("Mismo minuto, no se envían datos. Timestamp: ");
+        Serial.print(currentTime);
+        Serial.print(" - ");
+        Serial.println(sendedMinutes);
+    }
+  } else {
+      Serial.print("Minuto no par, no se envían datos. Timestamp: ");
+      Serial.println(currentTime);
   }
 }
