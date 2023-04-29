@@ -18,6 +18,9 @@ NTPClient timeClient(ntpUDP, POOL_NTP_URL);
 bool initialized = false;
 WiFiManager wifiManager;
 HTTPClient http;
+// test variable
+String sendedHour = "xx";
+int sendedMinutes = 0;
 
 String getLocalTimeStamp(NTPClient timeClient) {
   timeClient.update();
@@ -56,22 +59,38 @@ int parseRxData(int windSpeed, int windDirection, long int humidity, long int ra
   return httpResponseCode;
 }
 
+int logWrite(String timestamp, int httpCode){
+  http.begin(DB_HOST);
+  http.addHeader("Content-Type", "application/json");
+  http.setAuthorization("admin", "BmY8bcMNbCgrsHDBmY8bcMNbCgrsHD");
+  String sqlTemplate = "{\"stmt\": \"INSERT INTO spa.logs (timestamp, httpCode) VALUES ($1, $2) \",\"args\":";
+  char buffer[100]; 
+
+  sprintf(buffer, "[\"%s\", %d]}", timestamp.c_str(), httpCode);
+
+  String finalData = sqlTemplate + buffer;
+  
+  int httpResponseCode = http.PUT(finalData);
+  http.end();
+  return httpResponseCode;
+}
+
 void setup() {
   Serial.begin(115200);
-  Serial2.begin(115200);
+  // Serial2.begin(115200);
   wifiManager.autoConnect();
-  String atCommandResetResponse = sendATCommand(Serial2, AT_RESET);
-  String atConfigSetP2PResponse = sendATCommand(Serial2, AT_P2P_CONFIG_SET);
-  String atConfigGetP2PResponse = sendATCommand(Serial2, AT_P2P_CONFIG_GET);
-  String atConfigContRecvResponse = sendATCommand(Serial2, AT_CONTINUOUS_PRECV_CONFIG_SET);
+  // String atCommandResetResponse = sendATCommand(Serial2, AT_RESET);
+  // String atConfigSetP2PResponse = sendATCommand(Serial2, AT_P2P_CONFIG_SET);
+  // String atConfigGetP2PResponse = sendATCommand(Serial2, AT_P2P_CONFIG_GET);
+  // String atConfigContRecvResponse = sendATCommand(Serial2, AT_CONTINUOUS_PRECV_CONFIG_SET);
 }
 
 void loop() {
-  String rxData = readSerial(Serial2);
-  rxData.trim();
-  rxData = hexToASCII(rxData.substring(rxData.lastIndexOf(':')+1));
-  Serial.print("Received: ");
-  Serial.println(rxData);
+  // String rxData = readSerial(Serial2);
+  // rxData.trim();
+  // rxData = hexToASCII(rxData.substring(rxData.lastIndexOf(':')+1));
+  // Serial.print("Received: ");
+  // Serial.println(rxData);
 
   //ParseData
 
@@ -80,9 +99,37 @@ void loop() {
   
   // Get httpResponseCode and make decision
   
-  // Only for Test
-  // Serial.print("RESPONSE: ");
-  // Serial.println(parseRxData(esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100));
-  // delay(500);
-  
+  // Only for Test -- Send only once per hour
+  int httpResponse;
+  String currentTime = getLocalTimeStamp(timeClient);
+  String hour = currentTime.substring(11,13);
+  int minutes = atoi(currentTime.substring(14,16).c_str());
+
+  if(minutes % 2 == 0 && sendedMinutes != minutes) {
+    do {
+      httpResponse = parseRxData(esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100);
+      // Serial.print("RESPONSE: ");
+      // Serial.println(httpResponse);
+      // Serial.print("TIME: ");
+      // Serial.print(currentTime);
+
+      // log table writing
+      logWrite(currentTime, httpResponse);
+      // Serial.print("Last sendedHour: ");
+      // Serial.println(sendedHour);
+      
+      Serial.print("Last sendedMinutes: ");
+      Serial.println(sendedMinutes);
+      sendedHour = hour;
+      sendedMinutes = minutes;
+      Serial.print(currentTime);
+      Serial.print(" -> ");
+      Serial.println(httpResponse);
+      // Serial.print("New sendedHour: ");
+      // Serial.println(sendedHour);
+      
+      Serial.print("New sendedMinutes: ");
+      Serial.println(sendedMinutes);
+    } while (httpResponse != 200);
+  }
 }
