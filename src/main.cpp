@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <WiFiManager.h>
-#include <NTPClient.h>
 #include <HTTPClient.h>
-#include <Utils.h>
+#include <esp_sntp.h>
 #include <esp_random.h>
+#include <Utils.h>
 
 #define AT_CONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65534" // 65534 for continuous receive, 65535 for continuous receive until one reception.
 #define utcOffsetInSeconds 10800
@@ -14,22 +14,19 @@
 #define DB_PASS "Spautn2023pf"
 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, POOL_NTP_URL);
 bool initialized = false;
 WiFiManager wifiManager;
 HTTPClient http;
 
-String getLocalTimeStamp(NTPClient timeClient) {
-  timeClient.update();
-  time_t currentTime = timeClient.getEpochTime();
-
-  // Verificar si el valor de tiempo Unix es coherente
-  while (currentTime < 1682646677 || currentTime > 2000000000) {
-    timeClient.forceUpdate();
-    currentTime = timeClient.getEpochTime();
-  }
+String getLocalTimeStamp() {
+  time_t now;
   struct tm timeInfo;
-  localtime_r(&currentTime, &timeInfo);
+  char strftime_buf[64];
+
+  time(&now);
+  localtime_r(&now, &timeInfo);
+  
+  //localtime_r(&currentTime, &timeInfo);
   
   char timeString[30];
   snprintf(timeString, sizeof(timeString), "%04d-%02d-%02dT%02d:%02d:%02d%", 
@@ -43,7 +40,7 @@ int parseRxData(int windSpeed, int windDirection, long int humidity, long int ra
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization("admin", "BmY8bcMNbCgrsHDBmY8bcMNbCgrsHD");
-  String currentTime = getLocalTimeStamp(timeClient);
+  String currentTime = getLocalTimeStamp();
   String sqlTemplate = "{\"stmt\": \"INSERT INTO spa.weatherstation (timestamp, windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, pluviometer, weight) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) \",\"args\":";
   char buffer[100]; 
 
