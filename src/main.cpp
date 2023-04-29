@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <WiFiManager.h>
-#include <NTPClient.h>
 #include <HTTPClient.h>
 #include <Utils.h>
 #include <esp_sntp.h>
+#include <time.h>
 #include <esp_random.h>
 
 #define AT_CONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65534" // 65534 for continuous receive, 65535 for continuous receive until one reception.
@@ -15,25 +15,21 @@
 #define DB_PASS "Spautn2023pf"
 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, POOL_NTP_URL);
-bool initialized = false;
 WiFiManager wifiManager;
 HTTPClient http;
 // test variable
 String sendedHour = "xx";
 int sendedMinutes = 0;
 
-String getLocalTimeStamp(NTPClient timeClient) {
-  timeClient.update();
-  time_t currentTime = timeClient.getEpochTime();
-
-  // Verificar si el valor de tiempo Unix es coherente
-  while (currentTime < 1682646677 || currentTime > 2000000000) {
-    timeClient.forceUpdate();
-    currentTime = timeClient.getEpochTime();
-  }
+String getLocalTimeStamp() {
+  time_t now;
   struct tm timeInfo;
-  localtime_r(&currentTime, &timeInfo);
+  char strftime_buf[64];
+
+  time(&now);
+  localtime_r(&now, &timeInfo);
+  
+  //localtime_r(&currentTime, &timeInfo);
   
   char timeString[30];
   snprintf(timeString, sizeof(timeString), "%04d-%02d-%02dT%02d:%02d:%02d%", 
@@ -47,7 +43,7 @@ int parseRxData(int windSpeed, int windDirection, long int humidity, long int ra
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization("admin", "BmY8bcMNbCgrsHDBmY8bcMNbCgrsHD");
-  String currentTime = getLocalTimeStamp(timeClient);
+  String currentTime = getLocalTimeStamp();
   String sqlTemplate = "{\"stmt\": \"INSERT INTO spa.weatherstation (timestamp, windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, pluviometer, weight) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) \",\"args\":";
   char buffer[100]; 
 
@@ -84,6 +80,12 @@ void setup() {
   // String atConfigSetP2PResponse = sendATCommand(Serial2, AT_P2P_CONFIG_SET);
   // String atConfigGetP2PResponse = sendATCommand(Serial2, AT_P2P_CONFIG_GET);
   // String atConfigContRecvResponse = sendATCommand(Serial2, AT_CONTINUOUS_PRECV_CONFIG_SET);
+
+  // Internal clock
+  sntp_setoperatingmode(SNTP_OPMODE_POLL);
+  sntp_setservername(0, POOL_NTP_URL);
+  sntp_init();
+  sntp_sync_time(0);
 }
 
 void loop() {
@@ -102,7 +104,7 @@ void loop() {
   
   // Only for Test -- Send only once per hour
   int httpResponse;
-  String currentTime = getLocalTimeStamp(timeClient);
+  String currentTime = getLocalTimeStamp();
   Serial.print("Current time: ");
   Serial.println(currentTime);
   String hour = currentTime.substring(11,13);
