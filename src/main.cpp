@@ -40,7 +40,11 @@ String getLocalTimeStamp() {
   return timeString;
 }
 
-int parseRxData(int windSpeed, int windDirection, long int humidity, long int radiation, int temperature, int pressure, int leafMoisture, long int pluviometer, int weight){
+// rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight
+
+int parseRxData(long int rainMilimeters, int windSpeed,int windDirection,
+                int leafMoisture,long int humidity, long int radiation,
+                int temperature, int pressure, int weight){
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization("admin", "BmY8bcMNbCgrsHDBmY8bcMNbCgrsHD");
@@ -48,7 +52,7 @@ int parseRxData(int windSpeed, int windDirection, long int humidity, long int ra
   String sqlTemplate = "{\"stmt\": \"INSERT INTO spa.weatherstation (timestamp, windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, pluviometer, weight) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) \",\"args\":";
   char buffer[100]; 
 
-  sprintf(buffer, "[\"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d]}", currentTime.c_str(), windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, pluviometer, weight);
+  sprintf(buffer, "[\"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d]}", currentTime.c_str(), windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, rainMilimeters, weight);
 
   String finalData = sqlTemplate + buffer;
   
@@ -90,20 +94,12 @@ void setup() {
 }
 
 void loop() {
-  // if(Serial2.available()) {
-  //   String rxData = readSerial(Serial2);
-  //   rxData.trim();
-  //   rxData = hexToASCII(rxData.substring(rxData.lastIndexOf(':')+1));
-  //   Serial.print("Received: ");
-  //   Serial.println(rxData);
-  // }
 
   int httpResponse;
   String currentTime = getLocalTimeStamp();
-  // Serial.print("Current time: ");
-  //Serial.println(currentTime);
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
+  String jsonString = "{}";
 
   if(minutes % 2 == 0) {
     if(sendedMinutes != minutes){
@@ -122,11 +118,28 @@ void loop() {
           Serial.print("\nReceived data: ");
           Serial.println(rxData);
           frameReceived = true;
+          jsonString = rxData;
         }
       }
 
       do {
-        httpResponse = parseRxData(esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100);
+        DynamicJsonDocument doc(1024);
+        DeserializationError error = deserializeJson(doc, jsonString);
+        if (error) {
+          Serial.print("Error al parsear JSON: ");
+          Serial.println(error.c_str());
+        }
+
+        int rainMilimeters = doc["rain_milimeters"];
+        int windSpeed = doc["wing_speed"];
+        int windDirection = doc["wing_direction"];
+        int leafMoisture = doc["leaf_moisture"];
+        long int humidity = doc["relative_humidity"];
+        long int radiation = doc["solar_radiation"];
+        int temperature = doc["temperature"];
+        int pressure = doc["pressure"];
+        int weight = doc["weight"];
+        httpResponse = parseRxData(rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight);
 
         // log table insert
         logWrite(currentTime, httpResponse);
