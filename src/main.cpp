@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <WiFiManager.h>
 #include <HTTPClient.h>
 #include <Utils.h>
@@ -106,38 +107,30 @@ void loop() {
 
   if(minutes % 2 == 0) {
     if(sendedMinutes != minutes){
-      Serial.println("Petición de datos a estación.");
-
+      Serial.println("Polling to SPA...");
       String pollResponse = sendP2PPacket(Serial2, "POLL");
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
       boolean frameReceived = false;
+      Serial.print("Waiting response:");
       while (!frameReceived){
-        Serial.println("Esperando respuesta:");
+        Serial.print(".");
         delay(200);
         if (Serial2.available() > 0) {
           String rxData = readSerial(Serial2);
           rxData.trim();
           rxData = hexToASCII(rxData.substring(rxData.lastIndexOf(':')+1));
-          Serial.print("DATOS RECIBIDOS: ");
+          Serial.print("\nReceived data: ");
           Serial.println(rxData);
           frameReceived = true;
-          Serial.print("Trama recibida? - ");
-          Serial.println(frameReceived);
         }
       }
 
       do {
         httpResponse = parseRxData(esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100, esp_random() % 100);
-        // Serial.print("RESPONSE: ");
-        // Serial.println(httpResponse);
-        // Serial.print("TIME: ");
-        // Serial.print(currentTime);
 
-        // log table writing
+        // log table insert
         logWrite(currentTime, httpResponse);
-        // Serial.print("Last sendedHour: ");
-        // Serial.println(sendedHour);
-        
+
         Serial.print("Last sendedMinutes: ");
         Serial.println(sendedMinutes);
         sendedHour = hour;
@@ -145,20 +138,10 @@ void loop() {
         Serial.print(currentTime);
         Serial.print(" -> ");
         Serial.println(httpResponse);
-        // Serial.print("New sendedHour: ");
-        // Serial.println(sendedHour);
         
         Serial.print("New sendedMinutes: ");
         Serial.println(sendedMinutes);
       } while (httpResponse != 200);
-    } /*else {
-        Serial.print("Mismo minuto, no se envían datos. Timestamp: ");
-        Serial.print(currentTime);
-        Serial.print(" - ");
-        Serial.println(sendedMinutes);
-    }*/
-  } /*else {
-      Serial.print("Minuto no par, no se envían datos. Timestamp: ");
-      Serial.println(currentTime);
-  }*/
+    }
+  } 
 }
