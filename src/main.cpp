@@ -93,8 +93,8 @@ void loop() {
 
   int httpResponse;
   String currentTime = getLocalTimeStamp();
-  Serial.print("Current time: ");
-  Serial.println(currentTime);
+  // Serial.print("Current time: ");
+  // Serial.println(currentTime);
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
 
@@ -138,14 +138,14 @@ void loop() {
         Serial.print("New sendedMinutes: ");
         Serial.println(sendedMinutes);
       } while (httpResponse != 200);
-    } else {
+    } /*else {
         Serial.print("Mismo minuto, no se envían datos. Timestamp: ");
         Serial.print(currentTime);
         Serial.print(" - ");
         Serial.println(sendedMinutes);
-    }
-  } else {
+    }*/
+  } /*else {
       Serial.print("Minuto no par, no se envían datos. Timestamp: ");
       Serial.println(currentTime);
-  }
+  }*/
 }

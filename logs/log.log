@@ -1,0 +1,7 @@
+********************************************************************************
+Obsolete PIO Core v4.3.4 is used (previous was 6.1.7rc1)
+Please remove multiple PIO Cores from a system:
+https://docs.platformio.org/page/faq.html#multiple-pio-cores-in-a-system
+********************************************************************************
+--- Available filters and text transformations: colorize, debug, default, direct, hexlify, log2file, nocontrol, printable, send_on_enter, time
+--- More details at http://bit.ly/pio-monitor-filters
