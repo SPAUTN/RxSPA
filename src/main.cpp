@@ -73,6 +73,12 @@ int logWrite(String timestamp, int httpCode){
 }
 
 void setup() {
+  // Internal clock
+  sntp_setoperatingmode(SNTP_OPMODE_POLL);
+  sntp_setservername(0, POOL_NTP_URL);
+  sntp_init();
+  sntp_sync_time(0);
+
   Serial.begin(115200);
   Serial2.begin(115200);
   wifiManager.autoConnect();
@@ -94,7 +100,7 @@ void loop() {
   int httpResponse;
   String currentTime = getLocalTimeStamp();
   // Serial.print("Current time: ");
-  // Serial.println(currentTime);
+  //Serial.println(currentTime);
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
 
@@ -102,15 +108,22 @@ void loop() {
     if(sendedMinutes != minutes){
       Serial.println("Petición de datos a estación.");
 
-      String pollResponse = sendP2PPacket(Serial2, asciiToHex("POLL"));
+      String pollResponse = sendP2PPacket(Serial2, "POLL");
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
-
-      if (Serial2.available()) {
-        String rxData = readSerial(Serial2);
-        rxData.trim();
-        rxData = hexToASCII(rxData.substring(rxData.lastIndexOf(':')+1));
-        Serial.print("DATOS RECIBIDOS: ");
-        Serial.println(rxData);
+      boolean frameReceived = false;
+      while (!frameReceived){
+        Serial.println("Esperando respuesta:");
+        delay(200);
+        if (Serial2.available() > 0) {
+          String rxData = readSerial(Serial2);
+          rxData.trim();
+          rxData = hexToASCII(rxData.substring(rxData.lastIndexOf(':')+1));
+          Serial.print("DATOS RECIBIDOS: ");
+          Serial.println(rxData);
+          frameReceived = true;
+          Serial.print("Trama recibida? - ");
+          Serial.println(frameReceived);
+        }
       }
 
       do {
