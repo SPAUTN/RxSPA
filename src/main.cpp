@@ -107,6 +107,7 @@ void loop() {
       String pollResponse = sendP2PPacket(Serial2, "POLL");
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
       boolean frameReceived = false;
+      long actualMilis = millis();
       Serial.print("Waiting response:");
       while (!frameReceived){
         Serial.print(".");
@@ -119,13 +120,13 @@ void loop() {
           Serial.println(rxData);
           frameReceived = true;
           jsonString = rxData;
-        } else {
-          if (seconds + 5 <= atoi(getLocalTimeStamp().substring(18,19).c_str())) {
-            Serial.println("\nResending pooling command...");
-            sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
-            String pollResponse = sendP2PPacket(Serial2, "POLL");
-            sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
-          }
+        }
+        if (actualMilis + 5000 <= millis()) {
+          Serial.println("\nResending pooling command...");
+          sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
+          sendP2PPacket(Serial2, "POLL");
+          sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
+          actualMilis = millis();
         }
       }
 
