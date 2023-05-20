@@ -48,11 +48,10 @@ int parseRxData(long int rainMilimeters, int windSpeed,int windDirection,
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization("admin", "BmY8bcMNbCgrsHDBmY8bcMNbCgrsHD");
-  String currentTime = getLocalTimeStamp();
   String sqlTemplate = "{\"stmt\": \"INSERT INTO spa.weatherstation (timestamp, windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, pluviometer, weight) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) \",\"args\":";
   char buffer[100]; 
 
-  sprintf(buffer, "[\"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d]}", currentTime.c_str(), windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, rainMilimeters, weight);
+  sprintf(buffer, "[\"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d]}", getLocalTimeStamp().c_str(), windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, rainMilimeters, weight);
 
   String finalData = sqlTemplate + buffer;
   
@@ -99,6 +98,7 @@ void loop() {
   String currentTime = getLocalTimeStamp();
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
+  int seconds = atoi(currentTime.substring(18,19).c_str());
   String jsonString = "{}";
 
   if(minutes % 2 == 0) {
@@ -119,6 +119,13 @@ void loop() {
           Serial.println(rxData);
           frameReceived = true;
           jsonString = rxData;
+        } else {
+          if (seconds + 5 <= atoi(getLocalTimeStamp().substring(18,19).c_str())) {
+            Serial.println("\nResending pooling command...");
+            sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
+            String pollResponse = sendP2PPacket(Serial2, "POLL");
+            sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
+          }
         }
       }
 
