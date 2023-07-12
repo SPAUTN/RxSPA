@@ -47,7 +47,7 @@ int parseRxData(long int rainMilimeters, int windSpeed,int windDirection,
                 int temperature, int pressure, int weight){
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
-  http.setAuthorization("admin", "sR)E&A)2I2v&D6x8YECVySvc");
+  http.setAuthorization(DB_USER, DB_PASS);
   String sqlTemplate = "{\"stmt\": \"INSERT INTO spa.weatherstation (timestamp, windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, pluviometer, weight) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) \",\"args\":";
   char buffer[100]; 
 
