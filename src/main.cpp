@@ -63,7 +63,7 @@ int parseRxData(long int rainMilimeters, int windSpeed,int windDirection,
 int logWrite(String timestamp, int httpCode){
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
-  http.setAuthorization("admin", "BmY8bcMNbCgrsHDBmY8bcMNbCgrsHD");
+  http.setAuthorization(DB_USER, DB_PASS);
   String sqlTemplate = "{\"stmt\": \"INSERT INTO spa.logs (timestamp, httpCode) VALUES ($1, $2) \",\"args\":";
   char buffer[100]; 
 
