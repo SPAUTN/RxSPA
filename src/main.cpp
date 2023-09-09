@@ -60,6 +60,22 @@ int parseRxData(long int rainMilimeters, int windSpeed,int windDirection,
   return httpResponseCode;
 }
 
+
+int parseWeightData(long int weight, String table){
+  http.begin(DB_HOST);
+  http.addHeader("Content-Type", "application/json");
+  http.setAuthorization(DB_USER, DB_PASS);
+  String sqlTemplate = "{\"stmt\": \"INSERT INTO " + table + " (id, timestamp, dryweight) VALUES ($1, $2) \",\"args\":";
+  char buffer[100]; 
+
+  int id = int(http.POST("{\"stmt\":\"SELECT max(id) FROM " + table + "\"}")) + 1;
+  sprintf(buffer, "[%d,\"%s\", %d]}", id, getLocalTimeStamp().c_str(), weight);
+  String finalData = sqlTemplate + buffer;
+  int httpResponseCode = http.PUT(finalData);
+  http.end();
+  return httpResponseCode;
+}
+
 int logWrite(String timestamp, int httpCode){
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
@@ -93,7 +109,7 @@ void setup() {
 }
 
 void loop() {
-
+  String pollCommand;
   int httpResponse;
   String currentTime = getLocalTimeStamp();
   String hour = currentTime.substring(11,13);
@@ -104,7 +120,12 @@ void loop() {
   if(minutes % 2 == 0) {
     if(sendedMinutes != minutes){
       Serial.println("Polling to SPA...");
-      String pollResponse = sendP2PPacket(Serial2, "POLL");
+      if(currentTime == "00:00:00"){
+        pollCommand = "IRR";
+      } else {
+        pollCommand = "POLL";
+      }
+      String pollResponse = sendP2PPacket(Serial2, pollCommand);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
       boolean frameReceived = false;
       long actualMilis = millis();
@@ -147,11 +168,20 @@ void loop() {
         int temperature = doc["temperature"];
         int pressure = doc["pressure"];
         int weight = doc["weight"];
+
         httpResponse = parseRxData(rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight);
 
-        // log table insert
         logWrite(currentTime, httpResponse);
 
+        int dryweight = doc["dryweight"];
+        int wetweight = doc["wetweight"];
+      
+        httpResponse = parseWeightData(dryweight, "spa.dryweight");
+        logWrite(currentTime, httpResponse);
+
+        httpResponse = parseWeightData(wetweight, "spa.wetweight");
+        logWrite(currentTime, httpResponse);
+        
         Serial.print("Last sendedMinutes: ");
         Serial.println(sendedMinutes);
         sendedHour = hour;
