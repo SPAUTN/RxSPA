@@ -67,7 +67,7 @@ int parseWeightData(long int weight, String table){
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization(DB_USER, DB_PASS);
-  String sqlTemplate = "{\"stmt\": \"INSERT INTO " + table + " (id, timestamp, dryweight) VALUES ($1, $2) \",\"args\":";
+  String sqlTemplate = "{\"stmt\": \"INSERT INTO " + table + " (id, timestamp, dryweight) VALUES ($1, $2, $3) \",\"args\":";
   char buffer[100]; 
 
   int id = int(http.POST("{\"stmt\":\"SELECT max(id) FROM " + table + "\"}")) + 1;
@@ -183,6 +183,10 @@ void loop() {
         try {
           dryweight = doc["dryweight"];
           wetweight = doc["wetweight"];
+          Serial.print("DryWeight: ");
+          Serial.println(dryweight);
+          Serial.print("WetWeight: ");
+          Serial.println(wetweight);
           httpResponse = parseWeightData(dryweight, DRY_WEIGHT_TABLE);
           logWrite(currentTime, httpResponse);
           httpResponse = parseWeightData(wetweight, WET_WEIGHT_TABLE);
