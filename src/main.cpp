@@ -182,7 +182,7 @@ void loop() {
 
         try {
           dryweight = doc["dryweight"];
-          wetweight = doc["wetweight"];ç
+          wetweight = doc["wetweight"];
           httpResponse = parseWeightData(dryweight, DRY_WEIGHT_TABLE);
           logWrite(currentTime, httpResponse);
           httpResponse = parseWeightData(wetweight, WET_WEIGHT_TABLE);
