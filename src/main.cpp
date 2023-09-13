@@ -71,6 +71,10 @@ int parseWeightData(long int weight, String table){
   char buffer[100]; 
 
   int id = int(http.POST("{\"stmt\":\"SELECT max(id) FROM " + table + "\"}")) + 1;
+  Serial.print("Insert on table: ");
+  Serial.println(table);
+  Serial.print("New id: ");
+  Serial.println(id);
   sprintf(buffer, "[%d,\"%s\", %d]}", id, getLocalTimeStamp().c_str(), weight);
   String finalData = sqlTemplate + buffer;
   int httpResponseCode = http.PUT(finalData);
