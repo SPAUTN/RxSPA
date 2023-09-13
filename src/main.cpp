@@ -15,6 +15,8 @@
 #define DB_HOST "https://spautncluster.aks1.eastus2.azure.cratedb.net:4200/_sql"
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
+#define DRY_WEIGHT_TABLE "spa.dryweight"
+#define WET_WEIGHT_TABLE "spa.wetweight"
 
 WiFiUDP ntpUDP;
 WiFiManager wifiManager;
@@ -115,7 +117,7 @@ void loop() {
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
   int seconds = atoi(currentTime.substring(18,19).c_str());
-  String jsonString = "{}";
+  String jsonString = "";
 
   if(minutes % 2 == 0) {
     if(sendedMinutes != minutes){
@@ -152,11 +154,11 @@ void loop() {
       }
 
       do {
-        DynamicJsonDocument doc(1024);
+        DynamicJsonDocument doc(2048);
         DeserializationError error = deserializeJson(doc, jsonString);
         if (error) {
-          Serial.print("Error al parsear JSON: ");
-          Serial.println(error.c_str());
+          Serial.printf("Error al parsear JSON: %s \n", jsonString);
+          Serial.printf("Message error: %s \n", error.c_str());
         }
 
         int rainMilimeters = doc["rain_milimeters"];
@@ -168,18 +170,23 @@ void loop() {
         int temperature = doc["temperature"];
         int pressure = doc["pressure"];
         int weight = doc["weight"];
-
         httpResponse = parseRxData(rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight);
+        logWrite(currentTime, httpResponse);
+        
+        int dryweight;
+        int wetweight;
 
+        try {
+          dryweight = doc["dryweight"];
+          wetweight = doc["wetweight"];
+        } catch(const std::exception& e) {
+          Serial.println("No measures for weights before and after irrigations.");
+        }
+        
+        httpResponse = parseWeightData(dryweight, DRY_WEIGHT_TABLE);
         logWrite(currentTime, httpResponse);
 
-        int dryweight = doc["dryweight"];
-        int wetweight = doc["wetweight"];
-      
-        httpResponse = parseWeightData(dryweight, "spa.dryweight");
-        logWrite(currentTime, httpResponse);
-
-        httpResponse = parseWeightData(wetweight, "spa.wetweight");
+        httpResponse = parseWeightData(wetweight, WET_WEIGHT_TABLE);
         logWrite(currentTime, httpResponse);
         
         Serial.print("Last sendedMinutes: ");
