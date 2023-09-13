@@ -182,16 +182,15 @@ void loop() {
 
         try {
           dryweight = doc["dryweight"];
-          wetweight = doc["wetweight"];
+          wetweight = doc["wetweight"];ç
+          httpResponse = parseWeightData(dryweight, DRY_WEIGHT_TABLE);
+          logWrite(currentTime, httpResponse);
+          httpResponse = parseWeightData(wetweight, WET_WEIGHT_TABLE);
+          logWrite(currentTime, httpResponse);
         } catch(const std::exception& e) {
           Serial.println("No measures for weights before and after irrigations.");
         }
-        
-        httpResponse = parseWeightData(dryweight, DRY_WEIGHT_TABLE);
-        logWrite(currentTime, httpResponse);
 
-        httpResponse = parseWeightData(wetweight, WET_WEIGHT_TABLE);
-        logWrite(currentTime, httpResponse);
         
         Serial.print("Last sendedMinutes: ");
         Serial.println(sendedMinutes);
