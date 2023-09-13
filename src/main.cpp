@@ -157,7 +157,7 @@ void loop() {
         DynamicJsonDocument doc(2048);
         DeserializationError error = deserializeJson(doc, jsonString);
         if (error) {
-          Serial.printf("Error al parsear JSON: %s \n", jsonString);
+          Serial.printf("Error at trying to parse JSON: %s \n", jsonString);
           Serial.printf("Message error: %s \n", error.c_str());
         }
 
