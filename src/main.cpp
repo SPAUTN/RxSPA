@@ -126,7 +126,7 @@ void loop() {
   if(minutes % 2 == 0) {
     if(sendedMinutes != minutes){
       Serial.println("Polling to SPA...");
-      if(currentTime == "00:00:00"){
+      if(currentTime.substring(11,19) == "00:00:00"){
         pollCommand = "IRR";
       } else {
         pollCommand = "POLL";
