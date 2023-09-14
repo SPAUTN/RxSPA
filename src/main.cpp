@@ -149,9 +149,9 @@ void loop() {
           jsonString = rxData;
         }
         if (actualMilis + 5000 <= millis()) {
-          Serial.println("\nResending pooling command...");
+          Serial.printf("\nResending %s command...", pollCommand);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
-          sendP2PPacket(Serial2, "POLL");
+          sendP2PPacket(Serial2, pollCommand);
           sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
           actualMilis = millis();
         }
