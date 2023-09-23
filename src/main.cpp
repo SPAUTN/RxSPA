@@ -6,7 +6,6 @@
 #include <esp_sntp.h>
 #include <time.h>
 #include <esp_random.h>
-#include <regex.h>
 
 #define AT_CONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65534" // 65534 for continuous receive, 65535 for continuous receive until one reception.
 #define AT_SEMICONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65535" 
