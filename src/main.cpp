@@ -15,6 +15,8 @@
 #define DB_HOST "https://spautncluster.aks1.eastus2.azure.cratedb.net:4200/_sql"
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
+#define DRY_WEIGHT_TABLE "spa.dryweights"
+#define WET_WEIGHT_TABLE "spa.wetweights"
 
 WiFiUDP ntpUDP;
 WiFiManager wifiManager;
@@ -60,6 +62,32 @@ int parseRxData(long int rainMilimeters, int windSpeed,int windDirection,
   return httpResponseCode;
 }
 
+
+int parseWeightData(long int weight, String table){
+  DynamicJsonDocument doc(512);
+  http.begin(DB_HOST);
+  http.addHeader("Content-Type", "application/json");
+  http.setAuthorization(DB_USER, DB_PASS);
+  String sqlTemplate = "{\"stmt\": \"INSERT INTO " + table + " (id, timestamp, weight) VALUES ($1, $2, $3) \",\"args\":";
+  char buffer[100];
+
+  http.POST("{\"stmt\":\"SELECT max(id) FROM " + table + "\"}");
+  String queryResponse = http.getString();
+
+  DeserializationError error = deserializeJson(doc, queryResponse);
+  if (error) {
+    Serial.printf("Error at trying to parse JSON of DB response: %s \n", http.getString());
+    Serial.printf("Message error: %s \n", error.c_str());
+  }
+  String id_string_arr = doc["rows"];
+  int id = id_string_arr.substring(2, id_string_arr.length() - 2).toInt() + 1;
+  sprintf(buffer, "[%d,\"%s\", %d]}", id, getLocalTimeStamp().c_str(), weight);
+  String finalData = sqlTemplate + buffer;
+  int httpResponseCode = http.PUT(finalData);
+  http.end();
+  return httpResponseCode;
+}
+
 int logWrite(String timestamp, int httpCode){
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
@@ -93,18 +121,23 @@ void setup() {
 }
 
 void loop() {
-
+  String pollCommand;
   int httpResponse;
   String currentTime = getLocalTimeStamp();
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
   int seconds = atoi(currentTime.substring(18,19).c_str());
-  String jsonString = "{}";
+  String jsonString = "";
 
   if(minutes % 2 == 0) {
     if(sendedMinutes != minutes){
       Serial.println("Polling to SPA...");
-      String pollResponse = sendP2PPacket(Serial2, "POLL");
+      if(currentTime.substring(11,19) == "00:00:00"){
+        pollCommand = "IRR";
+      } else {
+        pollCommand = "POLL";
+      }
+      String pollResponse = sendP2PPacket(Serial2, pollCommand);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
       boolean frameReceived = false;
       long actualMilis = millis();
@@ -122,20 +155,20 @@ void loop() {
           jsonString = rxData;
         }
         if (actualMilis + 5000 <= millis()) {
-          Serial.println("\nResending pooling command...");
+          Serial.printf("\nResending %s command...", pollCommand);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
-          sendP2PPacket(Serial2, "POLL");
+          sendP2PPacket(Serial2, pollCommand);
           sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
           actualMilis = millis();
         }
       }
 
       do {
-        DynamicJsonDocument doc(1024);
+        DynamicJsonDocument doc(2048);
         DeserializationError error = deserializeJson(doc, jsonString);
         if (error) {
-          Serial.print("Error al parsear JSON: ");
-          Serial.println(error.c_str());
+          Serial.printf("Error at trying to parse JSON: %s \n", jsonString);
+          Serial.printf("Message error: %s \n", error.c_str());
         }
 
         int rainMilimeters = doc["rain_milimeters"];
@@ -148,10 +181,27 @@ void loop() {
         int pressure = doc["pressure"];
         int weight = doc["weight"];
         httpResponse = parseRxData(rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight);
-
-        // log table insert
         logWrite(currentTime, httpResponse);
+        
+        int dryweight;
+        int wetweight;
 
+        try {
+          dryweight = doc["dryweight"];
+          wetweight = doc["wetweight"];
+          Serial.print("DryWeight: ");
+          Serial.println(dryweight);
+          Serial.print("WetWeight: ");
+          Serial.println(wetweight);
+          httpResponse = parseWeightData(dryweight, DRY_WEIGHT_TABLE);
+          logWrite(currentTime, httpResponse);
+          httpResponse = parseWeightData(wetweight, WET_WEIGHT_TABLE);
+          logWrite(currentTime, httpResponse);
+        } catch(const std::exception& e) {
+          Serial.println("No measures for weights before and after irrigations.");
+        }
+
+        
         Serial.print("Last sendedMinutes: ");
         Serial.println(sendedMinutes);
         sendedHour = hour;
