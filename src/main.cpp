@@ -172,8 +172,8 @@ void loop() {
         }
 
         int rainMilimeters = doc["rain_milimeters"];
-        int windSpeed = doc["wing_speed"];
-        int windDirection = doc["wing_direction"];
+        int windSpeed = doc["wind_speed"];
+        int windDirection = doc["wind_direction"];
         int leafMoisture = doc["leaf_moisture"];
         long int humidity = doc["relative_humidity"];
         long int radiation = doc["solar_radiation"];
