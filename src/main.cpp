@@ -133,9 +133,9 @@ void loop() {
     if(sendedMinutes != minutes){
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
-        pollCommand = "IRR";
+        pollCommand = IRR_COMMAND;
       } else {
-        pollCommand = "POLL";
+        pollCommand = POLL_COMMAND;
       }
       String pollResponse = sendP2PPacket(Serial2, pollCommand);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
