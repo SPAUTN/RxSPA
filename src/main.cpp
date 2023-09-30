@@ -104,6 +104,52 @@ int logWrite(String timestamp, int httpCode){
   return httpResponseCode;
 }
 
+struct frameStructure {
+  int rainMilimeters;
+  int windSpeed;
+  int windDirection;
+  int leafMoisture;
+  long int humidity;
+  long int radiation;
+  int temperature;
+  int pressure;
+  int weight;
+  int dryweight;
+  int wetweight;
+};
+
+frameStructure parseFrameJson (String frame) {
+  frameStructure frameStructureReceived;
+  DynamicJsonDocument doc(2048);
+  DeserializationError error = deserializeJson(doc, frame);
+  if (error) {
+    Serial.printf("Error at trying to parse JSON: %s \n", frame);
+    Serial.printf("Message error: %s \n", error.c_str());
+  }
+
+  frameStructureReceived.rainMilimeters = doc["rain_milimeters"];
+  frameStructureReceived.windSpeed = doc["wind_speed"];
+  frameStructureReceived.windDirection = doc["wind_direction"];
+  frameStructureReceived.leafMoisture = doc["leaf_moisture"];
+  frameStructureReceived.humidity = doc["relative_humidity"];
+  frameStructureReceived.radiation = doc["solar_radiation"];
+  frameStructureReceived.temperature = doc["temperature"];
+  frameStructureReceived.pressure = doc["pressure"];
+  frameStructureReceived.weight = doc["weight"];
+
+  int dryweight;
+  int wetweight;
+
+  try {
+    dryweight = doc["dryweight"];
+    wetweight = doc["wetweight"];
+  } catch(const std::exception& e) {
+    Serial.println("No measures for weights before and after irrigations.");
+  }
+
+  return frameStructureReceived;
+}
+
 void setup() {
   // Internal clock
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
@@ -163,24 +209,10 @@ void loop() {
         }
       }
 
-      do {
-        DynamicJsonDocument doc(2048);
-        DeserializationError error = deserializeJson(doc, jsonString);
-        if (error) {
-          Serial.printf("Error at trying to parse JSON: %s \n", jsonString);
-          Serial.printf("Message error: %s \n", error.c_str());
-        }
+      frameStructure frameReceived = parseFrameJson(jsonString);
 
-        int rainMilimeters = doc["rain_milimeters"];
-        int windSpeed = doc["wind_speed"];
-        int windDirection = doc["wind_direction"];
-        int leafMoisture = doc["leaf_moisture"];
-        long int humidity = doc["relative_humidity"];
-        long int radiation = doc["solar_radiation"];
-        int temperature = doc["temperature"];
-        int pressure = doc["pressure"];
-        int weight = doc["weight"];
-        httpResponse = parseRxData(rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight);
+      // TODO: Modificar parseRxData para que solo reciba la structure, modificar tambien nombre, no es parse sino send
+      // httpResponse = parseRxData(frameReceived);
         logWrite(currentTime, httpResponse);
         
         int dryweight;
@@ -189,10 +221,6 @@ void loop() {
         try {
           dryweight = doc["dryweight"];
           wetweight = doc["wetweight"];
-          Serial.print("DryWeight: ");
-          Serial.println(dryweight);
-          Serial.print("WetWeight: ");
-          Serial.println(wetweight);
           httpResponse = parseWeightData(dryweight, DRY_WEIGHT_TABLE);
           logWrite(currentTime, httpResponse);
           httpResponse = parseWeightData(wetweight, WET_WEIGHT_TABLE);
@@ -200,18 +228,8 @@ void loop() {
         } catch(const std::exception& e) {
           Serial.println("No measures for weights before and after irrigations.");
         }
-
-        
-        Serial.print("Last sendedMinutes: ");
-        Serial.println(sendedMinutes);
         sendedHour = hour;
         sendedMinutes = minutes;
-        Serial.print(currentTime);
-        Serial.print(" -> ");
-        Serial.println(httpResponse);
-        
-        Serial.print("New sendedMinutes: ");
-        Serial.println(sendedMinutes);
       } while (httpResponse != 200);
     }
   } 
