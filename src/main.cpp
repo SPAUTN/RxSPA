@@ -24,6 +24,20 @@ HTTPClient http;
 String sendedHour = "xx";
 int sendedMinutes = 0;
 
+struct frameStructure {
+  int rainMilimeters;
+  int windSpeed;
+  int windDirection;
+  int leafMoisture;
+  long int humidity;
+  long int radiation;
+  int temperature;
+  int pressure;
+  int weight;
+  int dryweight;
+  int wetweight;
+};
+
 String getLocalTimeStamp() {
   time_t now;
   struct tm timeInfo;
@@ -44,20 +58,18 @@ String getLocalTimeStamp() {
 
 // rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight
 
-int parseRxData(long int rainMilimeters, int windSpeed,int windDirection,
-                int leafMoisture,long int humidity, long int radiation,
-                int temperature, int pressure, int weight){
+int sendFrameData(String frame, String table){
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization(DB_USER, DB_PASS);
-  String sqlTemplate = "{\"stmt\": \"INSERT INTO spa.weatherstation (timestamp, windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, pluviometer, weight) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) \",\"args\":";
-  char buffer[100]; 
-
-  sprintf(buffer, "[\"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d]}", getLocalTimeStamp().c_str(), windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, rainMilimeters, weight);
-
-  String finalData = sqlTemplate + buffer;
+  char buffer[512]; 
+  sprintf(buffer, "{\
+    \"table\": %s",
+    \"user\": %s,\
+    \"password\": %s,\
+    \"frame\":%s", table, DB_USER, DB_PASS, frame);
   
-  int httpResponseCode = http.PUT(finalData);
+  int httpResponseCode = http.PUT(buffer);
   http.end();
   return httpResponseCode;
 }
@@ -103,20 +115,6 @@ int logWrite(String timestamp, int httpCode){
   http.end();
   return httpResponseCode;
 }
-
-struct frameStructure {
-  int rainMilimeters;
-  int windSpeed;
-  int windDirection;
-  int leafMoisture;
-  long int humidity;
-  long int radiation;
-  int temperature;
-  int pressure;
-  int weight;
-  int dryweight;
-  int wetweight;
-};
 
 frameStructure parseFrameJson (String frame) {
   frameStructure frameStructureReceived;
