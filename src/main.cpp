@@ -12,7 +12,7 @@
 #define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
 
-#define DB_HOST "https://spautncluster.aks1.eastus2.azure.cratedb.net:4200/_sql"
+#define DB_HOST "https://spa-backend-81f8-dev.fl0.io/insert"
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
 #define STATION_TABLE "spa.weatherstation"
@@ -64,12 +64,7 @@ int sendFrameData(String frame, String table){
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization(DB_USER, DB_PASS);
   char buffer[512]; 
-  sprintf(buffer, "{\
-    \"table\": %s",
-    \"user\": %s,\
-    \"password\": %s,\
-    \"frame\":%s", table, DB_USER, DB_PASS, frame);
-  
+  sprintf(buffer, "{\"table\": %s,\"user\": %s,\"password\": %s,\"frame\":%s}", table, DB_USER, DB_PASS, frame);
   int httpResponseCode = http.PUT(buffer);
   http.end();
   return httpResponseCode;
@@ -183,29 +178,19 @@ void loop() {
       }
 
       // TODO: Modificar parseRxData para que solo reciba la structure, modificar tambien nombre, no es parse sino send
-        if(pollCommand != IRR_COMMAND) {
-          httpResponse = sendFrameData(frame, STATION_TABLE);
-          logWrite(currentTime, httpResponse);
-        } else {
-          httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")) + "}", STATION_TABLE);
-          logWrite(currentTime, httpResponse);
-          httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight"), frame.length()) + "}", STATION_TABLE);
-          logWrite(currentTime, httpResponse);
-        }
-        
-        try {
-          dryweight = doc["dryweight"];
-          wetweight = doc["wetweight"];
-          httpResponse = parseWeightData(dryweight, DRY_WEIGHT_TABLE);
-          logWrite(currentTime, httpResponse);
-          httpResponse = parseWeightData(wetweight, WET_WEIGHT_TABLE);
-          logWrite(currentTime, httpResponse);
-        } catch(const std::exception& e) {
-          Serial.println("No measures for weights before and after irrigations.");
-        }
-        sendedHour = hour;
-        sendedMinutes = minutes;
-      } while (httpResponse != 200);
-    }
-  } 
+      if(pollCommand != IRR_COMMAND) {
+        httpResponse = sendFrameData(frame, STATION_TABLE);
+        logWrite(currentTime, httpResponse);
+      } else {
+        httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")) + "}", STATION_TABLE);
+        logWrite(currentTime, httpResponse);
+        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight"), frame.indexOf("wetweight")) + "}", DRY_WEIGHT_TABLE);
+        logWrite(currentTime, httpResponse);
+        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight"), frame.length()), WET_WEIGHT_TABLE);
+        logWrite(currentTime, httpResponse);
+      }
+      sendedHour = hour;
+      sendedMinutes = minutes;
+    } while (httpResponse != 200);
+  }
 }
