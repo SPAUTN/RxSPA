@@ -15,6 +15,7 @@
 #define DB_HOST "https://spautncluster.aks1.eastus2.azure.cratedb.net:4200/_sql"
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
+#define STATION_TABLE "spa.weatherstation"
 #define DRY_WEIGHT_TABLE "spa.dryweights"
 #define WET_WEIGHT_TABLE "spa.wetweights"
 
@@ -70,32 +71,6 @@ int sendFrameData(String frame, String table){
     \"frame\":%s", table, DB_USER, DB_PASS, frame);
   
   int httpResponseCode = http.PUT(buffer);
-  http.end();
-  return httpResponseCode;
-}
-
-
-int parseWeightData(long int weight, String table){
-  DynamicJsonDocument doc(512);
-  http.begin(DB_HOST);
-  http.addHeader("Content-Type", "application/json");
-  http.setAuthorization(DB_USER, DB_PASS);
-  String sqlTemplate = "{\"stmt\": \"INSERT INTO " + table + " (id, timestamp, weight) VALUES ($1, $2, $3) \",\"args\":";
-  char buffer[100];
-
-  http.POST("{\"stmt\":\"SELECT max(id) FROM " + table + "\"}");
-  String queryResponse = http.getString();
-
-  DeserializationError error = deserializeJson(doc, queryResponse);
-  if (error) {
-    Serial.printf("Error at trying to parse JSON of DB response: %s \n", http.getString());
-    Serial.printf("Message error: %s \n", error.c_str());
-  }
-  String id_string_arr = doc["rows"];
-  int id = id_string_arr.substring(2, id_string_arr.length() - 2).toInt() + 1;
-  sprintf(buffer, "[%d,\"%s\", %d]}", id, getLocalTimeStamp().c_str(), weight);
-  String finalData = sqlTemplate + buffer;
-  int httpResponseCode = http.PUT(finalData);
   http.end();
   return httpResponseCode;
 }
@@ -171,7 +146,7 @@ void loop() {
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
   int seconds = atoi(currentTime.substring(18,19).c_str());
-  String jsonString = "";
+  String frame = "";
 
   if(minutes % 2 == 0) {
     if(sendedMinutes != minutes){
@@ -196,7 +171,7 @@ void loop() {
           Serial.print("\nReceived data: ");
           Serial.println(rxData);
           frameReceived = true;
-          jsonString = rxData;
+          frame = rxData;
         }
         if (actualMilis + 5000 <= millis()) {
           Serial.printf("\nResending %s command...", pollCommand);
@@ -207,15 +182,17 @@ void loop() {
         }
       }
 
-      frameStructure frameReceived = parseFrameJson(jsonString);
-
       // TODO: Modificar parseRxData para que solo reciba la structure, modificar tambien nombre, no es parse sino send
-      // httpResponse = parseRxData(frameReceived);
-        logWrite(currentTime, httpResponse);
+        if(pollCommand != IRR_COMMAND) {
+          httpResponse = sendFrameData(frame, STATION_TABLE);
+          logWrite(currentTime, httpResponse);
+        } else {
+          httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")) + "}", STATION_TABLE);
+          logWrite(currentTime, httpResponse);
+          httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight"), frame.length()) + "}", STATION_TABLE);
+          logWrite(currentTime, httpResponse);
+        }
         
-        int dryweight;
-        int wetweight;
-
         try {
           dryweight = doc["dryweight"];
           wetweight = doc["wetweight"];
