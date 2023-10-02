@@ -60,6 +60,8 @@ String getLocalTimeStamp() {
 // rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight
 
 int sendFrameData(String frame, String table){
+  Serial.print("Frame to send: ");
+  Serial.println(frame);
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization(DB_USER, DB_PASS);
