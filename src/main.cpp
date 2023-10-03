@@ -67,6 +67,8 @@ int sendFrameData(String frame, String table){
   http.setAuthorization(DB_USER, DB_PASS);
   char buffer[512]; 
   sprintf(buffer, "{\"table\": %s,\"user\": %s,\"password\": %s,\"frame\":%s}", table, DB_USER, DB_PASS, frame);
+  Serial.print("Body request: ");
+  Serial.println(buffer);
   int httpResponseCode = http.PUT(buffer);
   http.end();
   return httpResponseCode;
@@ -184,7 +186,7 @@ void loop() {
         httpResponse = sendFrameData(frame, STATION_TABLE);
         logWrite(currentTime, httpResponse);
       } else {
-        httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")) + "}", STATION_TABLE);
+        httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")-2) + "}", STATION_TABLE);
         logWrite(currentTime, httpResponse);
         httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight")-1, frame.indexOf("wetweight")-2) + "}", DRY_WEIGHT_TABLE);
         logWrite(currentTime, httpResponse);
