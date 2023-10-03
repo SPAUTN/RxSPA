@@ -186,9 +186,9 @@ void loop() {
       } else {
         httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")) + "}", STATION_TABLE);
         logWrite(currentTime, httpResponse);
-        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight"), frame.indexOf("wetweight")) + "}", DRY_WEIGHT_TABLE);
+        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight")-1, frame.indexOf("wetweight")-2) + "}", DRY_WEIGHT_TABLE);
         logWrite(currentTime, httpResponse);
-        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight"), frame.length()), WET_WEIGHT_TABLE);
+        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight")-1, frame.length()), WET_WEIGHT_TABLE);
         logWrite(currentTime, httpResponse);
       }
       sendedHour = hour;
