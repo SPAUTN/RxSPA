@@ -65,8 +65,8 @@ int sendFrameData(String frame, String table){
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization(DB_USER, DB_PASS);
-  char buffer[512]; 
-  sprintf(buffer, "{\"table\": %s,\"user\": %s,\"password\": %s,\"frame\":%s}", table, DB_USER, DB_PASS, frame);
+  char buffer[1024]; 
+  sprintf(buffer, "{\"table\": \"%s\",\"user\": \"%s\",\"password\": \"%s\",\"frame\": %s}", &table, DB_USER, DB_PASS, &frame);
   Serial.print("Body request: ");
   Serial.println(buffer);
   int httpResponseCode = http.PUT(buffer);
