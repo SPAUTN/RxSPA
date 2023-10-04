@@ -64,12 +64,11 @@ int sendFrameData(String frame, String table){
   Serial.println(frame);
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
-  http.setAuthorization(DB_USER, DB_PASS);
-  char buffer[1024]; 
-  sprintf(buffer, "{\"table\": \"%s\",\"user\": \"%s\",\"password\": \"%s\",\"frame\": %s}", &table, DB_USER, DB_PASS, &frame);
+  //http.setAuthorization(DB_USER, DB_PASS);
+  String bodyRequest = "{\"table\": \"" + table + "\",\"user\": \"" + DB_USER + "\",\"password\": \"" +DB_PASS + "\",\"frame\": " + frame + "}";
   Serial.print("Body request: ");
-  Serial.println(buffer);
-  int httpResponseCode = http.PUT(buffer);
+  Serial.println(bodyRequest);
+  int httpResponseCode = http.PUT(bodyRequest);
   http.end();
   return httpResponseCode;
 }
