@@ -25,19 +25,19 @@ HTTPClient http;
 String sendedHour = "xx";
 int sendedMinutes = 0;
 
-struct frameStructure {
-  int rainMilimeters;
-  int windSpeed;
-  int windDirection;
-  int leafMoisture;
-  long int humidity;
-  long int radiation;
-  int temperature;
-  int pressure;
-  int weight;
-  int dryweight;
-  int wetweight;
-};
+// struct frameStructure {
+//   int rainMilimeters;
+//   int windSpeed;
+//   int windDirection;
+//   int leafMoisture;
+//   long int humidity;
+//   long int radiation;
+//   int temperature;
+//   int pressure;
+//   int weight;
+//   int dryweight;
+//   int wetweight;
+// };
 
 String getLocalTimeStamp() {
   time_t now;
@@ -68,7 +68,9 @@ int sendFrameData(String frame, String table){
   String bodyRequest = "{\"table\": \"" + table + "\",\"user\": \"" + DB_USER + "\",\"password\": \"" +DB_PASS + "\",\"frame\": " + frame + "}";
   Serial.print("Body request: ");
   Serial.println(bodyRequest);
-  int httpResponseCode = http.PUT(bodyRequest);
+  int httpResponseCode = http.POST(bodyRequest);
+  Serial.print("HTTP Response code: ");
+  Serial.println(httpResponseCode);
   http.end();
   return httpResponseCode;
 }
@@ -89,37 +91,37 @@ int logWrite(String timestamp, int httpCode){
   return httpResponseCode;
 }
 
-frameStructure parseFrameJson (String frame) {
-  frameStructure frameStructureReceived;
-  DynamicJsonDocument doc(2048);
-  DeserializationError error = deserializeJson(doc, frame);
-  if (error) {
-    Serial.printf("Error at trying to parse JSON: %s \n", frame);
-    Serial.printf("Message error: %s \n", error.c_str());
-  }
+// frameStructure parseFrameJson (String frame) {
+//   frameStructure frameStructureReceived;
+//   DynamicJsonDocument doc(2048);
+//   DeserializationError error = deserializeJson(doc, frame);
+//   if (error) {
+//     Serial.printf("Error at trying to parse JSON: %s \n", frame);
+//     Serial.printf("Message error: %s \n", error.c_str());
+//   }
 
-  frameStructureReceived.rainMilimeters = doc["rain_milimeters"];
-  frameStructureReceived.windSpeed = doc["wind_speed"];
-  frameStructureReceived.windDirection = doc["wind_direction"];
-  frameStructureReceived.leafMoisture = doc["leaf_moisture"];
-  frameStructureReceived.humidity = doc["relative_humidity"];
-  frameStructureReceived.radiation = doc["solar_radiation"];
-  frameStructureReceived.temperature = doc["temperature"];
-  frameStructureReceived.pressure = doc["pressure"];
-  frameStructureReceived.weight = doc["weight"];
+//   frameStructureReceived.rainMilimeters = doc["rain_milimeters"];
+//   frameStructureReceived.windSpeed = doc["wind_speed"];
+//   frameStructureReceived.windDirection = doc["wind_direction"];
+//   frameStructureReceived.leafMoisture = doc["leaf_moisture"];
+//   frameStructureReceived.humidity = doc["relative_humidity"];
+//   frameStructureReceived.radiation = doc["solar_radiation"];
+//   frameStructureReceived.temperature = doc["temperature"];
+//   frameStructureReceived.pressure = doc["pressure"];
+//   frameStructureReceived.weight = doc["weight"];
 
-  int dryweight;
-  int wetweight;
+//   int dryweight;
+//   int wetweight;
 
-  try {
-    dryweight = doc["dryweight"];
-    wetweight = doc["wetweight"];
-  } catch(const std::exception& e) {
-    Serial.println("No measures for weights before and after irrigations.");
-  }
+//   try {
+//     dryweight = doc["dryweight"];
+//     wetweight = doc["wetweight"];
+//   } catch(const std::exception& e) {
+//     Serial.println("No measures for weights before and after irrigations.");
+//   }
 
-  return frameStructureReceived;
-}
+//   return frameStructureReceived;
+// }
 
 void setup() {
   // Internal clock
