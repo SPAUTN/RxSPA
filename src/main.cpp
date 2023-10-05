@@ -25,20 +25,6 @@ HTTPClient http;
 String sendedHour = "xx";
 int sendedMinutes = 0;
 
-// struct frameStructure {
-//   int rainMilimeters;
-//   int windSpeed;
-//   int windDirection;
-//   int leafMoisture;
-//   long int humidity;
-//   long int radiation;
-//   int temperature;
-//   int pressure;
-//   int weight;
-//   int dryweight;
-//   int wetweight;
-// };
-
 String getLocalTimeStamp() {
   time_t now;
   struct tm timeInfo;
@@ -46,9 +32,7 @@ String getLocalTimeStamp() {
 
   time(&now);
   localtime_r(&now, &timeInfo);
-  
-  //localtime_r(&currentTime, &timeInfo);
-  
+    
   char timeString[30];
   snprintf(timeString, sizeof(timeString), "%04d-%02d-%02dT%02d:%02d:%02d%", 
     timeInfo.tm_year + 1900, timeInfo.tm_mon + 1, timeInfo.tm_mday,
@@ -90,38 +74,6 @@ int logWrite(String timestamp, int httpCode){
   http.end();
   return httpResponseCode;
 }
-
-// frameStructure parseFrameJson (String frame) {
-//   frameStructure frameStructureReceived;
-//   DynamicJsonDocument doc(2048);
-//   DeserializationError error = deserializeJson(doc, frame);
-//   if (error) {
-//     Serial.printf("Error at trying to parse JSON: %s \n", frame);
-//     Serial.printf("Message error: %s \n", error.c_str());
-//   }
-
-//   frameStructureReceived.rainMilimeters = doc["rain_milimeters"];
-//   frameStructureReceived.windSpeed = doc["wind_speed"];
-//   frameStructureReceived.windDirection = doc["wind_direction"];
-//   frameStructureReceived.leafMoisture = doc["leaf_moisture"];
-//   frameStructureReceived.humidity = doc["relative_humidity"];
-//   frameStructureReceived.radiation = doc["solar_radiation"];
-//   frameStructureReceived.temperature = doc["temperature"];
-//   frameStructureReceived.pressure = doc["pressure"];
-//   frameStructureReceived.weight = doc["weight"];
-
-//   int dryweight;
-//   int wetweight;
-
-//   try {
-//     dryweight = doc["dryweight"];
-//     wetweight = doc["wetweight"];
-//   } catch(const std::exception& e) {
-//     Serial.println("No measures for weights before and after irrigations.");
-//   }
-
-//   return frameStructureReceived;
-// }
 
 void setup() {
   // Internal clock
@@ -181,8 +133,6 @@ void loop() {
           actualMilis = millis();
         }
       }
-
-      // TODO: Modificar parseRxData para que solo reciba la structure, modificar tambien nombre, no es parse sino send
       if(pollCommand != IRR_COMMAND) {
         httpResponse = sendFrameData(frame, STATION_TABLE);
         logWrite(currentTime, httpResponse);
@@ -196,6 +146,6 @@ void loop() {
       }
       sendedHour = hour;
       sendedMinutes = minutes;
-    } while (httpResponse != 200);
+    } while (httpResponse != 200 || httpResponse != 201);
   }
 }
