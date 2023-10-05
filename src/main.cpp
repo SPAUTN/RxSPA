@@ -147,7 +147,7 @@ void loop() {
         }
         sendedHour = hour;
         sendedMinutes = minutes;
-      } while (httpResponse != 200 || httpResponse != 201);
+      } while (httpResponse != 201);
     }
   }
 }
