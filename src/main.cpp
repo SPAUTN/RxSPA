@@ -133,19 +133,21 @@ void loop() {
           actualMilis = millis();
         }
       }
-      if(pollCommand != IRR_COMMAND) {
-        httpResponse = sendFrameData(frame, STATION_TABLE);
-        logWrite(currentTime, httpResponse);
-      } else {
-        httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")-2) + "}", STATION_TABLE);
-        logWrite(currentTime, httpResponse);
-        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight")-1, frame.indexOf("wetweight")-2) + "}", DRY_WEIGHT_TABLE);
-        logWrite(currentTime, httpResponse);
-        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight")-1, frame.length()), WET_WEIGHT_TABLE);
-        logWrite(currentTime, httpResponse);
-      }
-      sendedHour = hour;
-      sendedMinutes = minutes;
-    } while (httpResponse != 200 || httpResponse != 201);
+      do {
+        if(pollCommand != IRR_COMMAND) {
+          httpResponse = sendFrameData(frame, STATION_TABLE);
+          logWrite(currentTime, httpResponse);
+        } else {
+          httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")-2) + "}", STATION_TABLE);
+          logWrite(currentTime, httpResponse);
+          httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight")-1, frame.indexOf("wetweight")-2) + "}", DRY_WEIGHT_TABLE);
+          logWrite(currentTime, httpResponse);
+          httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight")-1, frame.length()), WET_WEIGHT_TABLE);
+          logWrite(currentTime, httpResponse);
+        }
+        sendedHour = hour;
+        sendedMinutes = minutes;
+      } while (httpResponse != 200 || httpResponse != 201);
+    }
   }
 }
