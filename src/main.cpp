@@ -135,7 +135,7 @@ void loop() {
           frameReceived = true;
           frame = rxData;
         }
-        if (actualMilis + 5000 <= millis()) {
+        if (actualMilis + 10000 <= millis()) {
           Serial.printf("\nResending %s command...", pollCommand);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
           sendP2PPacket(Serial2, pollCommand);
