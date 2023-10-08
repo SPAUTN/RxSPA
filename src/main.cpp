@@ -43,18 +43,28 @@ String getLocalTimeStamp() {
 
 // rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight
 
-int sendFrameData(String frame, String table){
+int sendFrameData(String frame, String table, int attempts){
+  int n_attemp = 0;
   Serial.print("Frame to send: ");
   Serial.println(frame);
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
-  //http.setAuthorization(DB_USER, DB_PASS);
   String bodyRequest = "{\"table\": \"" + table + "\",\"user\": \"" + DB_USER + "\",\"password\": \"" +DB_PASS + "\",\"frame\": " + frame + "}";
   Serial.print("Body request: ");
-  Serial.println(bodyRequest);
-  int httpResponseCode = http.POST(bodyRequest);
-  Serial.print("HTTP Response code: ");
-  Serial.println(httpResponseCode);
+  int httpResponseCode;
+  do {
+    n_attemp ++;
+    Serial.println(bodyRequest);
+    httpResponseCode = http.POST(bodyRequest);
+    Serial.print("HTTP Response code: ");
+    Serial.print(httpResponseCode);
+    Serial.print("on attemp number ");
+    Serial.println(n_attemp);
+    if(httpResponseCode != 201) {
+      delay(500);
+    }
+  } while (n_attemp > attempts && httpResponseCode != 201);
+  
   http.end();
   return httpResponseCode;
 }
@@ -133,21 +143,16 @@ void loop() {
           actualMilis = millis();
         }
       }
-      do {
-        if(pollCommand != IRR_COMMAND) {
-          httpResponse = sendFrameData(frame, STATION_TABLE);
-          logWrite(currentTime, httpResponse);
-        } else {
-          httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")-2) + "}", STATION_TABLE);
-          logWrite(currentTime, httpResponse);
-          httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight")-1, frame.indexOf("wetweight")-2) + "}", DRY_WEIGHT_TABLE);
-          logWrite(currentTime, httpResponse);
-          httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight")-1, frame.length()), WET_WEIGHT_TABLE);
-          logWrite(currentTime, httpResponse);
-        }
-        sendedHour = hour;
-        sendedMinutes = minutes;
-      } while (httpResponse != 201);
+      
+      if(pollCommand != IRR_COMMAND) {
+        httpResponse = sendFrameData(frame, STATION_TABLE, 3);
+      } else {
+        httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")-2) + "}", STATION_TABLE, 3);
+        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight")-1, frame.indexOf("wetweight")-2) + "}", DRY_WEIGHT_TABLE, 3);
+        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight")-1, frame.length()), WET_WEIGHT_TABLE, 3);
+      }
+      sendedHour = hour;
+      sendedMinutes = minutes;
     }
   }
 }
