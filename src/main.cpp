@@ -47,11 +47,10 @@ String getLocalTimeStamp() {
 }
 
 int logger(int httpcode, String message, String level){
-  String table = "spa.logs";
   String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"RXSPA\"}";
   http.begin(LOG_HOST);
   http.addHeader("Content-Type", "application/json");
-  String bodyRequest = "{\"table\": \"" + table + "\",\"user\": \"" + DB_USER + "\",\"password\": \""+ DB_PASS + "\",\"frame\": " + frame + "}";
+  String bodyRequest = "{\"user\": \"" + String(DB_USER) + "\",\"password\": \""+ DB_PASS + "\",\"frame\": " + frame + "}";
   Serial.print("Logger bodyRequest: ");
   Serial.println(bodyRequest);
   int httpResponseCode = http.POST(bodyRequest);
