@@ -19,6 +19,10 @@
 #define DRY_WEIGHT_TABLE "spa.dryweights"
 #define WET_WEIGHT_TABLE "spa.wetweights"
 
+#define ERROR_LEVEL "ERROR"
+#define INFO_LEVEL "INFORMATION"
+#define DEBUG_LEVEL "DEBUG"
+
 WiFiUDP ntpUDP;
 WiFiManager wifiManager;
 HTTPClient http;
@@ -41,7 +45,22 @@ String getLocalTimeStamp() {
   return timeString;
 }
 
-// rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight
+int logger(int httpcode, String message, String level){
+  String table = "spa.logs";
+  String frame = "{\"httpcode\": +\"" + String(httpcode) +
+                "\",\"message\": +\"" + message +
+                "\",\"level\":\"" + level +
+                "\",\"source\":\"RXSPA\"}";
+  http.begin(DB_HOST);
+  http.addHeader("Content-Type", "application/json");
+  String bodyRequest = "{\"table\": \"" + table +
+        "\",\"user\": \"" +
+        DB_USER + "\",\"password\": \""+
+        DB_PASS + "\",\"frame\": " + frame + "}";
+  int httpResponseCode = http.POST(bodyRequest);
+  http.end();
+  return httpResponseCode;
+}
 
 int sendFrameData(String frame, String table, int attempts){
   int n_attemp = 0;
@@ -52,35 +71,27 @@ int sendFrameData(String frame, String table, int attempts){
   String bodyRequest = "{\"table\": \"" + table + "\",\"user\": \"" + DB_USER + "\",\"password\": \"" +DB_PASS + "\",\"frame\": " + frame + "}";
   Serial.print("Body request: ");
   int httpResponseCode;
+  String log_message;
   do {
     n_attemp ++;
     Serial.println(bodyRequest);
     httpResponseCode = http.POST(bodyRequest);
+    log_message = "Inserting on table: " + table + "; http message: " + http.getString() + "; on inserting frame: " + frame;
     Serial.print("HTTP Response code: ");
     Serial.print(httpResponseCode);
-    Serial.print("on attemp number ");
+    Serial.print(" on attemp number ");
     Serial.println(n_attemp);
     if(httpResponseCode != 201) {
+      logger(httpResponseCode, log_message, ERROR_LEVEL);
       delay(500);
+    } else {
+      logger(httpResponseCode, log_message, DEBUG_LEVEL);
     }
   } while (n_attemp > attempts && httpResponseCode != 201);
   
-  http.end();
-  return httpResponseCode;
-}
 
-int logWrite(String timestamp, int httpCode){
-  http.begin(DB_HOST);
-  http.addHeader("Content-Type", "application/json");
-  http.setAuthorization(DB_USER, DB_PASS);
-  String sqlTemplate = "{\"stmt\": \"INSERT INTO spa.logs (timestamp, httpCode) VALUES ($1, $2) \",\"args\":";
-  char buffer[100]; 
+  logger(httpResponseCode, "Final of sendFrame data: " + frame, INFO_LEVEL);
 
-  sprintf(buffer, "[\"%s\", %d]}", timestamp.c_str(), httpCode);
-
-  String finalData = sqlTemplate + buffer;
-  
-  int httpResponseCode = http.PUT(finalData);
   http.end();
   return httpResponseCode;
 }
@@ -119,6 +130,7 @@ void loop() {
         pollCommand = POLL_COMMAND;
       }
       String pollResponse = sendP2PPacket(Serial2, pollCommand);
+      logger(0, "Sended " + pollCommand + "to SPA.", INFO_LEVEL);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
       boolean frameReceived = false;
       long actualMilis = millis();
@@ -134,9 +146,11 @@ void loop() {
           Serial.println(rxData);
           frameReceived = true;
           frame = rxData;
+          logger(0, "Received frame data from SPA: " + frame, INFO_LEVEL);
         }
         if (actualMilis + 10000 <= millis()) {
           Serial.printf("\nResending %s command...", pollCommand);
+          logger(0, "Not frame received, resending command" + pollCommand + "to SPA.", ERROR_LEVEL);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
           sendP2PPacket(Serial2, pollCommand);
           sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
