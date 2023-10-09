@@ -47,8 +47,8 @@ String getLocalTimeStamp() {
 
 int logger(int httpcode, String message, String level){
   String table = "spa.logs";
-  String frame = "{\"httpcode\": +\"" + String(httpcode) +
-                "\",\"message\": +\"" + message +
+  String frame = "{\"httpcode\": \"" + String(httpcode) +
+                "\",\"message\": \"" + message +
                 "\",\"level\":\"" + level +
                 "\",\"source\":\"RXSPA\"}";
   http.begin(DB_HOST);
