@@ -47,16 +47,12 @@ String getLocalTimeStamp() {
 
 int logger(int httpcode, String message, String level){
   String table = "spa.logs";
-  String frame = "{\"httpcode\": \"" + String(httpcode) +
-                "\",\"message\": \"" + message +
-                "\",\"level\":\"" + level +
-                "\",\"source\":\"RXSPA\"}";
+  String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"RXSPA\"}";
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
-  String bodyRequest = "{\"table\": \"" + table +
-        "\",\"user\": \"" +
-        DB_USER + "\",\"password\": \""+
-        DB_PASS + "\",\"frame\": " + frame + "}";
+  String bodyRequest = "{\"table\": \"" + table + "\",\"user\": \"" + DB_USER + "\",\"password\": \""+ DB_PASS + "\",\"frame\": " + frame + "}";
+  Serial.print("Logger bodyRequest: ");
+  Serial.println(bodyRequest);
   int httpResponseCode = http.POST(bodyRequest);
   http.end();
   return httpResponseCode;
@@ -150,7 +146,7 @@ void loop() {
         }
         if (actualMilis + 10000 <= millis()) {
           Serial.printf("\nResending %s command...", pollCommand);
-          logger(0, "Not frame received, resending command" + pollCommand + "to SPA.", ERROR_LEVEL);
+          logger(0, "Not frame received, resending command " + pollCommand + " to SPA.", ERROR_LEVEL);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
           sendP2PPacket(Serial2, pollCommand);
           sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
