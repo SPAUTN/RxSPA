@@ -13,6 +13,7 @@
 #define POOL_NTP_URL "pool.ntp.org"
 
 #define DB_HOST "https://spa-backend-81f8-dev.fl0.io/insert"
+#define LOG_HOST "https://spa-backend-81f8-dev.fl0.io/log"
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
 #define STATION_TABLE "spa.weatherstation"
@@ -48,7 +49,7 @@ String getLocalTimeStamp() {
 int logger(int httpcode, String message, String level){
   String table = "spa.logs";
   String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"RXSPA\"}";
-  http.begin(DB_HOST);
+  http.begin(LOG_HOST);
   http.addHeader("Content-Type", "application/json");
   String bodyRequest = "{\"table\": \"" + table + "\",\"user\": \"" + DB_USER + "\",\"password\": \""+ DB_PASS + "\",\"frame\": " + frame + "}";
   Serial.print("Logger bodyRequest: ");
@@ -85,10 +86,10 @@ int sendFrameData(String frame, String table, int attempts){
     }
   } while (n_attemp > attempts && httpResponseCode != 201);
   
+  http.end();
 
   logger(httpResponseCode, "Final of sendFrame data: " + frame, INFO_LEVEL);
 
-  http.end();
   return httpResponseCode;
 }
 
