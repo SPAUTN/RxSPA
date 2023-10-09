@@ -12,9 +12,10 @@
 #define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
 
-#define DB_HOST "https://spautncluster.aks1.eastus2.azure.cratedb.net:4200/_sql"
+#define DB_HOST "https://spa-backend-81f8-dev.fl0.io/insert"
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
+#define STATION_TABLE "spa.weatherstation"
 #define DRY_WEIGHT_TABLE "spa.dryweights"
 #define WET_WEIGHT_TABLE "spa.wetweights"
 
@@ -31,9 +32,7 @@ String getLocalTimeStamp() {
 
   time(&now);
   localtime_r(&now, &timeInfo);
-  
-  //localtime_r(&currentTime, &timeInfo);
-  
+    
   char timeString[30];
   snprintf(timeString, sizeof(timeString), "%04d-%02d-%02dT%02d:%02d:%02d%", 
     timeInfo.tm_year + 1900, timeInfo.tm_mon + 1, timeInfo.tm_mday,
@@ -44,46 +43,28 @@ String getLocalTimeStamp() {
 
 // rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight
 
-int parseRxData(long int rainMilimeters, int windSpeed,int windDirection,
-                int leafMoisture,long int humidity, long int radiation,
-                int temperature, int pressure, int weight){
+int sendFrameData(String frame, String table, int attempts){
+  int n_attemp = 0;
+  Serial.print("Frame to send: ");
+  Serial.println(frame);
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
-  http.setAuthorization(DB_USER, DB_PASS);
-  String sqlTemplate = "{\"stmt\": \"INSERT INTO spa.weatherstation (timestamp, windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, pluviometer, weight) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) \",\"args\":";
-  char buffer[100]; 
-
-  sprintf(buffer, "[\"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d]}", getLocalTimeStamp().c_str(), windSpeed, windDirection, humidity, radiation, temperature, pressure, leafMoisture, rainMilimeters, weight);
-
-  String finalData = sqlTemplate + buffer;
+  String bodyRequest = "{\"table\": \"" + table + "\",\"user\": \"" + DB_USER + "\",\"password\": \"" +DB_PASS + "\",\"frame\": " + frame + "}";
+  Serial.print("Body request: ");
+  int httpResponseCode;
+  do {
+    n_attemp ++;
+    Serial.println(bodyRequest);
+    httpResponseCode = http.POST(bodyRequest);
+    Serial.print("HTTP Response code: ");
+    Serial.print(httpResponseCode);
+    Serial.print("on attemp number ");
+    Serial.println(n_attemp);
+    if(httpResponseCode != 201) {
+      delay(500);
+    }
+  } while (n_attemp > attempts && httpResponseCode != 201);
   
-  int httpResponseCode = http.PUT(finalData);
-  http.end();
-  return httpResponseCode;
-}
-
-
-int parseWeightData(long int weight, String table){
-  DynamicJsonDocument doc(512);
-  http.begin(DB_HOST);
-  http.addHeader("Content-Type", "application/json");
-  http.setAuthorization(DB_USER, DB_PASS);
-  String sqlTemplate = "{\"stmt\": \"INSERT INTO " + table + " (id, timestamp, weight) VALUES ($1, $2, $3) \",\"args\":";
-  char buffer[100];
-
-  http.POST("{\"stmt\":\"SELECT max(id) FROM " + table + "\"}");
-  String queryResponse = http.getString();
-
-  DeserializationError error = deserializeJson(doc, queryResponse);
-  if (error) {
-    Serial.printf("Error at trying to parse JSON of DB response: %s \n", http.getString());
-    Serial.printf("Message error: %s \n", error.c_str());
-  }
-  String id_string_arr = doc["rows"];
-  int id = id_string_arr.substring(2, id_string_arr.length() - 2).toInt() + 1;
-  sprintf(buffer, "[%d,\"%s\", %d]}", id, getLocalTimeStamp().c_str(), weight);
-  String finalData = sqlTemplate + buffer;
-  int httpResponseCode = http.PUT(finalData);
   http.end();
   return httpResponseCode;
 }
@@ -127,15 +108,15 @@ void loop() {
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
   int seconds = atoi(currentTime.substring(18,19).c_str());
-  String jsonString = "";
+  String frame = "";
 
   if(minutes % 2 == 0) {
     if(sendedMinutes != minutes){
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
-        pollCommand = "IRR";
+        pollCommand = IRR_COMMAND;
       } else {
-        pollCommand = "POLL";
+        pollCommand = POLL_COMMAND;
       }
       String pollResponse = sendP2PPacket(Serial2, pollCommand);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
@@ -152,9 +133,9 @@ void loop() {
           Serial.print("\nReceived data: ");
           Serial.println(rxData);
           frameReceived = true;
-          jsonString = rxData;
+          frame = rxData;
         }
-        if (actualMilis + 5000 <= millis()) {
+        if (actualMilis + 10000 <= millis()) {
           Serial.printf("\nResending %s command...", pollCommand);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
           sendP2PPacket(Serial2, pollCommand);
@@ -162,57 +143,16 @@ void loop() {
           actualMilis = millis();
         }
       }
-
-      do {
-        DynamicJsonDocument doc(2048);
-        DeserializationError error = deserializeJson(doc, jsonString);
-        if (error) {
-          Serial.printf("Error at trying to parse JSON: %s \n", jsonString);
-          Serial.printf("Message error: %s \n", error.c_str());
-        }
-
-        int rainMilimeters = doc["rain_milimeters"];
-        int windSpeed = doc["wind_speed"];
-        int windDirection = doc["wind_direction"];
-        int leafMoisture = doc["leaf_moisture"];
-        long int humidity = doc["relative_humidity"];
-        long int radiation = doc["solar_radiation"];
-        int temperature = doc["temperature"];
-        int pressure = doc["pressure"];
-        int weight = doc["weight"];
-        httpResponse = parseRxData(rainMilimeters, windSpeed, windDirection, leafMoisture, humidity, radiation, temperature, pressure, weight);
-        logWrite(currentTime, httpResponse);
-        
-        int dryweight;
-        int wetweight;
-
-        try {
-          dryweight = doc["dryweight"];
-          wetweight = doc["wetweight"];
-          Serial.print("DryWeight: ");
-          Serial.println(dryweight);
-          Serial.print("WetWeight: ");
-          Serial.println(wetweight);
-          httpResponse = parseWeightData(dryweight, DRY_WEIGHT_TABLE);
-          logWrite(currentTime, httpResponse);
-          httpResponse = parseWeightData(wetweight, WET_WEIGHT_TABLE);
-          logWrite(currentTime, httpResponse);
-        } catch(const std::exception& e) {
-          Serial.println("No measures for weights before and after irrigations.");
-        }
-
-        
-        Serial.print("Last sendedMinutes: ");
-        Serial.println(sendedMinutes);
-        sendedHour = hour;
-        sendedMinutes = minutes;
-        Serial.print(currentTime);
-        Serial.print(" -> ");
-        Serial.println(httpResponse);
-        
-        Serial.print("New sendedMinutes: ");
-        Serial.println(sendedMinutes);
-      } while (httpResponse != 200);
+      
+      if(pollCommand != IRR_COMMAND) {
+        httpResponse = sendFrameData(frame, STATION_TABLE, 3);
+      } else {
+        httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")-2) + "}", STATION_TABLE, 3);
+        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight")-1, frame.indexOf("wetweight")-2) + "}", DRY_WEIGHT_TABLE, 3);
+        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight")-1, frame.length()), WET_WEIGHT_TABLE, 3);
+      }
+      sendedHour = hour;
+      sendedMinutes = minutes;
     }
-  } 
+  }
 }
