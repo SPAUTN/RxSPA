@@ -89,8 +89,6 @@ int sendFrameData(String frame, String table, int attempts){
   
   http.end();
 
-  logger(httpResponseCode, "Final of sendFrame data: " + frame, INFO_LEVEL);
-
   return httpResponseCode;
 }
 
