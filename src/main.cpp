@@ -19,6 +19,7 @@
 #define STATION_TABLE "spa.weatherstation"
 #define DRY_WEIGHT_TABLE "spa.dryweights"
 #define WET_WEIGHT_TABLE "spa.wetweights"
+#define BASIC "Basic c2VydmljZWVzcDpTcGF1dG4yMDIzcGY="
 
 #define ERROR_LEVEL "ERROR"
 #define INFO_LEVEL "INFORMATION"
@@ -50,7 +51,8 @@ int logger(int httpcode, String message, String level){
   String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"RXSPA\"}";
   http.begin(LOG_HOST);
   http.addHeader("Content-Type", "application/json");
-  String bodyRequest = "{\"user\": \"" + String(DB_USER) + "\",\"password\": \""+ DB_PASS + "\",\"frame\": " + frame + "}";
+  http.setAuthorization(API_BASIC_AUTH);
+  String bodyRequest = "{\"frame\": " + frame + "}";
   Serial.print("Logger bodyRequest: ");
   Serial.println(bodyRequest);
   int httpResponseCode = http.POST(bodyRequest);
@@ -64,7 +66,8 @@ int sendFrameData(String frame, String table, int attempts){
   Serial.println(frame);
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
-  String bodyRequest = "{\"table\": \"" + table + "\",\"user\": \"" + DB_USER + "\",\"password\": \"" +DB_PASS + "\",\"frame\": " + frame + "}";
+  http.setAuthorization(API_BASIC_AUTH);
+  String bodyRequest = "{\"table\": \"" + table + "\",\"frame\": " + frame + "}";
   Serial.print("Body request: ");
   int httpResponseCode;
   String log_message;
