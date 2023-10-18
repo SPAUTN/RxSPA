@@ -14,6 +14,7 @@
 
 #define DB_HOST "https://spa-backend-81f8-dev.fl0.io/insert"
 #define LOG_HOST "https://spa-backend-81f8-dev.fl0.io/log"
+#define CON_HOST "https://spa-backend-81f8-dev.fl0.io/etcrain"
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
 #define STATION_TABLE "spa.weatherstation"
@@ -92,16 +93,16 @@ int sendFrameData(String frame, String table, int attempts){
   return httpResponseCode;
 }
 
-String realizarConsulta() {
+String performQuery() {
   HTTPClient http;
 
-  http.begin("https://spa-backend-81f8-dev.fl0.io/etcrain");
+  http.begin(CON_HOST);
   int httpCode = http.GET();
 
   if (httpCode > 0) {
     if (httpCode == 201) {
       String ETc_Rain = http.getString();
-      Serial.print("Consulta recibida: ");
+      Serial.print("Query received: ");
       Serial.println(ETc_Rain);
 
       const size_t capacity = JSON_OBJECT_SIZE(2) + 40;
@@ -112,11 +113,11 @@ String realizarConsulta() {
       double ETc = doc["ETc"];
       double cumulative_rain = doc["cumulative_rain"];
 
-      String valoresETcRain = String(ETc, 2) + ";" + String(cumulative_rain, 2);
+      String ETcAndRainValues = String(ETc, 2) + ";" + String(cumulative_rain, 2);
 
-      Serial.println(valoresETcRain);
+      Serial.println(ETcAndRainValues);
 
-      return valoresETcRain; // Devuelve el string 'valoresETcRain'
+      return ETcAndRainValues;
     }
   }
   http.end();
@@ -140,7 +141,7 @@ void setup() {
 
 void loop() {
   String pollCommand;
-  String valoresETcRain;
+  String ETcAndRainValues;
   int httpResponse;
   String currentTime = getLocalTimeStamp();
   String hour = currentTime.substring(11,13);
@@ -153,12 +154,12 @@ void loop() {
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
         pollCommand = IRR_COMMAND;
-        valoresETcRain = realizarConsulta();
+        ETcAndRainValues = performQuery();
       } else {
         pollCommand = POLL_COMMAND;
-        valoresETcRain = "0;0"       //evitar basura en combinedMessage
+        ETcAndRainValues = "0;0";       
       }
-      String combinedMessage = pollCommand + ";" + valoresETcRain + ";";    //formato para el string
+      String combinedMessage = pollCommand + ";" + ETcAndRainValues + ";";    
       String pollResponse = sendP2PPacket(Serial2, combinedMessage);
       logger(0, "Sended " + pollCommand + "to SPA.", INFO_LEVEL);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
