@@ -14,7 +14,7 @@
 
 #define DB_HOST "https://spa-backend-81f8-dev.fl0.io/insert"
 #define LOG_HOST "https://spa-backend-81f8-dev.fl0.io/log"
-#define CON_HOST "https://spa-backend-81f8-dev.fl0.io/etcrain"
+#define HOST_ETCRAIN "https://spa-backend-81f8-dev.fl0.io/etcrain"
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
 #define STATION_TABLE "spa.weatherstation"
@@ -93,15 +93,16 @@ int sendFrameData(String frame, String table, int attempts){
   return httpResponseCode;
 }
 
-String performQuery() {
+String queryETcAndRainValues() {
   HTTPClient http;
 
-  http.begin(CON_HOST);
+  http.begin(HOST_ETCRAIN);
   int httpCode = http.GET();
 
   if (httpCode > 0) {
     if (httpCode == 201) {
       String ETc_Rain = http.getString();
+      http.end();
       Serial.print("Query received: ");
       Serial.println(ETc_Rain);
 
@@ -120,7 +121,6 @@ String performQuery() {
       return ETcAndRainValues;
     }
   }
-  http.end();
 }
 
 void setup() {
@@ -154,10 +154,10 @@ void loop() {
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
         pollCommand = IRR_COMMAND;
-        ETcAndRainValues = performQuery();
+        ETcAndRainValues = queryETcAndRainValues();
       } else {
         pollCommand = POLL_COMMAND;
-        ETcAndRainValues = "0;0";       
+        ETcAndRainValues = "0;0";       //en revisión
       }
       String combinedMessage = pollCommand + ";" + ETcAndRainValues + ";";    
       String pollResponse = sendP2PPacket(Serial2, combinedMessage);
