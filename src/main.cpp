@@ -180,10 +180,10 @@ void loop() {
           logger(0, "Received frame data from SPA: " + frame, INFO_LEVEL);
         }
         if (actualMilis + 10000 <= millis()) {
-          Serial.printf("\nResending %s command...", pollCommand);
+          Serial.printf("\nResending %s command...", combinedMessage);
           logger(0, "Not frame received, resending command " + pollCommand + " to SPA.", ERROR_LEVEL);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
-          sendP2PPacket(Serial2, pollCommand);
+          sendP2PPacket(Serial2, combinedMessage);
           sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
           actualMilis = millis();
         }
