@@ -146,7 +146,7 @@ void loop() {
     if(sendedMinutes != minutes){
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
-        pollCommand = IRR_COMMAND + ";" + queryETcAndRainValues() + ";";
+        pollCommand = String(IRR_COMMAND) + ";" + queryETcAndRainValues() + ";";
       } else {
         pollCommand = POLL_COMMAND;
       }    
