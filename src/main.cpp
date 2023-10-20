@@ -94,31 +94,25 @@ int sendFrameData(String frame, String table, int attempts){
 }
 
 String queryETcAndRainValues() {
-  HTTPClient http;
+ HTTPClient http;
+ http.begin(HOST_ETCRAIN);
+ int httpCode = http.GET();
 
-  http.begin(HOST_ETCRAIN);
-  int httpCode = http.GET();
+ if (httpCode > 0) {
+   if (httpCode == 201) {
+     String ETc_Rain = http.getString();
+     http.end();
+     Serial.print("Query received: ");
+     Serial.println(ETc_Rain);
+     const size_t capacity = JSON_OBJECT_SIZE(2) + 40;
+     DynamicJsonDocument doc(capacity);
+     deserializeJson(doc, ETc_Rain);
+     double ETc = doc["ETc"];
+     double cumulative_rain = doc["cumulative_rain"];
+     String ETcAndRainValues = String(ETc, 2) + ";" + String(cumulative_rain, 2);
+     Serial.println(ETcAndRainValues);
 
-  if (httpCode > 0) {
-    if (httpCode == 201) {
-      String ETc_Rain = http.getString();
-      http.end();
-      Serial.print("Query received: ");
-      Serial.println(ETc_Rain);
-
-      const size_t capacity = JSON_OBJECT_SIZE(2) + 40;
-      DynamicJsonDocument doc(capacity);
-
-      deserializeJson(doc, ETc_Rain);
-
-      double ETc = doc["ETc"];
-      double cumulative_rain = doc["cumulative_rain"];
-
-      String ETcAndRainValues = String(ETc, 2) + ";" + String(cumulative_rain, 2);
-
-      Serial.println(ETcAndRainValues);
-
-      return ETcAndRainValues;
+     return ETcAndRainValues;
     }
   }
 }
@@ -141,7 +135,6 @@ void setup() {
 
 void loop() {
   String pollCommand;
-  String ETcAndRainValues;
   int httpResponse;
   String currentTime = getLocalTimeStamp();
   String hour = currentTime.substring(11,13);
@@ -153,14 +146,11 @@ void loop() {
     if(sendedMinutes != minutes){
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
-        pollCommand = IRR_COMMAND;
-        ETcAndRainValues = queryETcAndRainValues();
+        pollCommand = IRR_COMMAND + ";" + queryETcAndRainValues() + ";";
       } else {
         pollCommand = POLL_COMMAND;
-        ETcAndRainValues = "0;0";       //en revisión
-      }
-      String combinedMessage = pollCommand + ";" + ETcAndRainValues + ";";    
-      String pollResponse = sendP2PPacket(Serial2, combinedMessage);
+      }    
+      String pollResponse = sendP2PPacket(Serial2, pollCommand);
       logger(0, "Sended " + pollCommand + "to SPA.", INFO_LEVEL);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
       boolean frameReceived = false;
@@ -180,10 +170,10 @@ void loop() {
           logger(0, "Received frame data from SPA: " + frame, INFO_LEVEL);
         }
         if (actualMilis + 10000 <= millis()) {
-          Serial.printf("\nResending %s command...", combinedMessage);
+          Serial.printf("\nResending %s command...", pollCommand);
           logger(0, "Not frame received, resending command " + pollCommand + " to SPA.", ERROR_LEVEL);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
-          sendP2PPacket(Serial2, combinedMessage);
+          sendP2PPacket(Serial2, pollCommand);
           sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
           actualMilis = millis();
         }
