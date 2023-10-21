@@ -94,11 +94,11 @@ int sendFrameData(String frame, String table, int attempts){
 }
 
 String queryETcAndRainValues() {
- HTTPClient http;
- http.begin(HOST_ETCRAIN);
- int httpCode = http.GET();
+  HTTPClient http;
+  String ETcAndRainValues = "";
+  http.begin(HOST_ETCRAIN);
+  int httpCode = http.GET();
 
- if (httpCode > 0) {
    if (httpCode == 201) {
      String ETc_Rain = http.getString();
      http.end();
@@ -109,12 +109,10 @@ String queryETcAndRainValues() {
      deserializeJson(doc, ETc_Rain);
      double ETc = doc["ETc"];
      double cumulative_rain = doc["cumulative_rain"];
-     String ETcAndRainValues = String(ETc, 2) + ";" + String(cumulative_rain, 2);
+     ETcAndRainValues = String(ETc, 2) + ";" + String(cumulative_rain, 2);
      Serial.println(ETcAndRainValues);
-
-     return ETcAndRainValues;
     }
-  }
+  return ETcAndRainValues;
 }
 
 void setup() {
