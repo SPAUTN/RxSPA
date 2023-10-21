@@ -99,7 +99,7 @@ String queryETcAndRainValues() {
   http.begin(HOST_ETCRAIN);
   int httpCode = http.GET();
 
-   if (httpCode == 201) {
+   if (httpCode == 200) {
      String ETc_Rain = http.getString();
      http.end();
      Serial.print("Query received: ");
@@ -177,7 +177,7 @@ void loop() {
         }
       }
       
-      if(pollCommand != IRR_COMMAND) {
+      if(!pollCommand.startsWith(IRR_COMMAND)) {
         httpResponse = sendFrameData(frame, STATION_TABLE, 3);
       } else {
         httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")-2) + "}", STATION_TABLE, 3);
