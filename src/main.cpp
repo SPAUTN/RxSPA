@@ -134,6 +134,7 @@ void setup() {
 void loop() {
   String pollCommand;
   int httpResponse;
+  int WaitingTimeToResend = 0;
   String currentTime = getLocalTimeStamp();
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
@@ -145,8 +146,10 @@ void loop() {
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
         pollCommand = String(IRR_COMMAND) + ";" + queryETcAndRainValues() + ";";
+        WaitingTimeToResend = 60000;
       } else {
         pollCommand = POLL_COMMAND;
+        WaitingTimeToResend = 10000;
       }    
       String pollResponse = sendP2PPacket(Serial2, pollCommand);
       logger(0, "Sended " + pollCommand + "to SPA.", INFO_LEVEL);
@@ -167,8 +170,8 @@ void loop() {
           frame = rxData;
           logger(0, "Received frame data from SPA: " + frame, INFO_LEVEL);
         }
-        if (actualMilis + 10000 <= millis()) {
-          Serial.printf("\nResending %s command...", pollCommand);
+        if (actualMilis + WaitingTimeToResend <= millis()) {
+          Serial.printf("\nResending %s command...", &pollCommand);
           logger(0, "Not frame received, resending command " + pollCommand + " to SPA.", ERROR_LEVEL);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
           sendP2PPacket(Serial2, pollCommand);
