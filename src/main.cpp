@@ -23,7 +23,6 @@
 #define STATION_TABLE "spa.weatherstation"
 #define DRY_WEIGHT_TABLE "spa.dryweights"
 #define WET_WEIGHT_TABLE "spa.wetweights"
-#define BASIC "Basic c2VydmljZWVzcDpTcGF1dG4yMDIzcGY="
 
 #define ERROR_LEVEL "ERROR"
 #define INFO_LEVEL "INFORMATION"
