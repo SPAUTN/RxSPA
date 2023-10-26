@@ -103,6 +103,8 @@ String queryETcAndRainValues(String command = "") {
   HTTPClient http;
   String ETcAndRainValues = "";
   http.begin(ETCRAIN_HOST);
+  http.addHeader("Content-Type", "application/json");
+  http.setAuthorization(API_BASIC_AUTH);
   int httpCode = http.GET();
 
   if (httpCode == 200) {
