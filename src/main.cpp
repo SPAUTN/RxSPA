@@ -9,14 +9,17 @@
 
 #define AT_CONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65534" // 65534 for continuous receive, 65535 for continuous receive until one reception.
 #define AT_SEMICONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65535" 
+
 #define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
 
 #define DB_HOST "https://spa-backend-81f8-dev.fl0.io/insert"
 #define LOG_HOST "https://spa-backend-81f8-dev.fl0.io/log"
-#define HOST_ETCRAIN "https://spa-backend-81f8-dev.fl0.io/etcrain"
+#define ETCRAIN_HOST "https://spa-backend-81f8-dev.fl0.io/etcrain"
+
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
+
 #define STATION_TABLE "spa.weatherstation"
 #define DRY_WEIGHT_TABLE "spa.dryweights"
 #define WET_WEIGHT_TABLE "spa.wetweights"
@@ -93,26 +96,26 @@ int sendFrameData(String frame, String table, int attempts){
   return httpResponseCode;
 }
 
-String queryETcAndRainValues() {
+String queryETcAndRainValues(String command = "") {
   HTTPClient http;
   String ETcAndRainValues = "";
-  http.begin(HOST_ETCRAIN);
+  http.begin(ETCRAIN_HOST);
   int httpCode = http.GET();
 
-   if (httpCode == 200) {
-     String ETc_Rain = http.getString();
-     http.end();
-     Serial.print("Query received: ");
-     Serial.println(ETc_Rain);
-     const size_t capacity = JSON_OBJECT_SIZE(2) + 40;
-     DynamicJsonDocument doc(capacity);
-     deserializeJson(doc, ETc_Rain);
-     double ETc = doc["ETc"];
-     double cumulative_rain = doc["cumulative_rain"];
-     ETcAndRainValues = String(ETc, 2) + ";" + String(cumulative_rain, 2);
-     Serial.println(ETcAndRainValues);
-    }
-  return ETcAndRainValues;
+  if (httpCode == 200) {
+    String responseBody = http.getString();
+    http.end();
+    Serial.print("Query received: ");
+    Serial.println(responseBody);
+    const size_t capacity = JSON_OBJECT_SIZE(2) + 40;
+    DynamicJsonDocument doc(capacity);
+    deserializeJson(doc, responseBody);
+    double ETc = doc["ETc"];
+    double cumulative_rain = doc["cumulative_rain"];
+    ETcAndRainValues = String(ETc, 2) + ";" + String(cumulative_rain, 2);
+    Serial.println(ETcAndRainValues);
+  }
+  return command + ";" + ETcAndRainValues + ";";
 }
 
 void setup() {
@@ -134,7 +137,7 @@ void setup() {
 void loop() {
   String pollCommand;
   int httpResponse;
-  int WaitingTimeToResend = 0;
+  int timeToAttempt = 0;
   String currentTime = getLocalTimeStamp();
   String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
@@ -145,11 +148,11 @@ void loop() {
     if(sendedMinutes != minutes){
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
-        pollCommand = String(IRR_COMMAND) + ";" + queryETcAndRainValues() + ";";
-        WaitingTimeToResend = 60000;
+        pollCommand = queryETcAndRainValues(String(IRR_COMMAND));
+        timeToAttempt = 60000;
       } else {
         pollCommand = POLL_COMMAND;
-        WaitingTimeToResend = 10000;
+        timeToAttempt = 10000;
       }    
       String pollResponse = sendP2PPacket(Serial2, pollCommand);
       logger(0, "Sended " + pollCommand + "to SPA.", INFO_LEVEL);
@@ -170,7 +173,7 @@ void loop() {
           frame = rxData;
           logger(0, "Received frame data from SPA: " + frame, INFO_LEVEL);
         }
-        if (actualMilis + WaitingTimeToResend <= millis()) {
+        if (actualMilis + timeToAttempt <= millis()) {
           Serial.printf("\nResending %s command...", &pollCommand);
           logger(0, "Not frame received, resending command " + pollCommand + " to SPA.", ERROR_LEVEL);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
