@@ -54,7 +54,7 @@ int logger(int httpcode, String message, String level){
   String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"RXSPA\"}";
   http.begin(LOG_HOST);
   http.addHeader("Content-Type", "application/json");
-  http.setAuthorization(API_BASIC_AUTH);
+  http.setAuthorization(DB_USER, DB_PASS);
   String bodyRequest = "{\"frame\": " + frame + "}";
   Serial.print("Logger bodyRequest: ");
   Serial.println(bodyRequest);
@@ -69,7 +69,7 @@ int sendFrameData(String frame, String table, int attempts){
   Serial.println(frame);
   http.begin(DB_HOST);
   http.addHeader("Content-Type", "application/json");
-  http.setAuthorization(API_BASIC_AUTH);
+  http.setAuthorization(DB_USER, DB_PASS);
   String bodyRequest = "{\"table\": \"" + table + "\",\"frame\": " + frame + "}";
   Serial.print("Body request: ");
   int httpResponseCode;
@@ -103,7 +103,7 @@ String queryETcAndRainValues(String command = "") {
   String ETcAndRainValues = "";
   http.begin(ETCRAIN_HOST);
   http.addHeader("Content-Type", "application/json");
-  http.setAuthorization(API_BASIC_AUTH);
+  http.setAuthorization(DB_USER, DB_PASS);
   int httpCode = http.GET();
 
   if (httpCode == 200) {
