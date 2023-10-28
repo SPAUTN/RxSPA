@@ -100,7 +100,7 @@ int sendFrameData(String frame, String table, int attempts){
 
 String queryWetweightAndRainValues(String command = "") {
   HTTPClient http;
-  String WetweightAndRainValues = "";
+  String wetweightAndRainValues = "";
   http.begin(ETCRAIN_HOST);
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization(DB_USER, DB_PASS);
@@ -114,12 +114,12 @@ String queryWetweightAndRainValues(String command = "") {
     const size_t capacity = JSON_OBJECT_SIZE(2) + 40;
     DynamicJsonDocument doc(capacity);
     deserializeJson(doc, responseBody);
-    double Wetweight = doc["Wetweight"];
+    double wetweight = doc["Wetweight"];
     double cumulative_rain = doc["cumulative_rain"];
-    WetweightAndRainValues = String(Wetweight, 2) + ";" + String(cumulative_rain, 2);
-    Serial.println(WetweightAndRainValues);
+    wetweightAndRainValues = String(wetweight, 2) + ";" + String(cumulative_rain, 2);
+    Serial.println(wetweightAndRainValues);
   }
-  return command + ";" + WetweightAndRainValues + ";";
+  return command + ";" + wetweightAndRainValues + ";";
 }
 
 void setup() {
