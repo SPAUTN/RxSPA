@@ -114,7 +114,7 @@ String queryWetweightAndRainValues(String command = "") {
     const size_t capacity = JSON_OBJECT_SIZE(2) + 40;
     DynamicJsonDocument doc(capacity);
     deserializeJson(doc, responseBody);
-    double wetweight = doc["Wetweight"];
+    double wetweight = doc["wetweight"];
     double cumulative_rain = doc["cumulative_rain"];
     wetweightAndRainValues = String(wetweight, 2) + ";" + String(cumulative_rain, 2);
     Serial.println(wetweightAndRainValues);
