@@ -21,8 +21,8 @@
 #define DB_PASS "Spautn2023pf"
 
 #define STATION_TABLE "spa.weatherstation"
-#define DRY_WEIGHT_TABLE "spa.dryweights"
 #define WET_WEIGHT_TABLE "spa.wetweights"
+#define ETC_TABLE "spa.etc"
 
 #define ERROR_LEVEL "ERROR"
 #define INFO_LEVEL "INFORMATION"
@@ -191,7 +191,7 @@ void loop() {
         httpResponse = sendFrameData(frame, STATION_TABLE, 3);
       } else {
         httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")-2) + "}", STATION_TABLE, 3);
-        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight")-1, frame.indexOf("wetweight")-2) + "}", DRY_WEIGHT_TABLE, 3);
+        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("etc")-1, frame.indexOf("wetweight")-2) + "}", ETC_TABLE, 3);
         httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight")-1, frame.length()), WET_WEIGHT_TABLE, 3);
       }
       sendedHour = hour;
