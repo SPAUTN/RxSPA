@@ -98,9 +98,9 @@ int sendFrameData(String frame, String table, int attempts){
   return httpResponseCode;
 }
 
-String queryETcAndRainValues(String command = "") {
+String queryWetweightAndRainValues(String command = "") {
   HTTPClient http;
-  String ETcAndRainValues = "";
+  String wetweightAndRainValues = "";
   http.begin(ETCRAIN_HOST);
   http.addHeader("Content-Type", "application/json");
   http.setAuthorization(DB_USER, DB_PASS);
@@ -114,12 +114,12 @@ String queryETcAndRainValues(String command = "") {
     const size_t capacity = JSON_OBJECT_SIZE(2) + 40;
     DynamicJsonDocument doc(capacity);
     deserializeJson(doc, responseBody);
-    double ETc = doc["ETc"];
+    double wetweight = doc["wetweight"];
     double cumulative_rain = doc["cumulative_rain"];
-    ETcAndRainValues = String(ETc, 2) + ";" + String(cumulative_rain, 2);
-    Serial.println(ETcAndRainValues);
+    wetweightAndRainValues = String(wetweight, 2) + ";" + String(cumulative_rain, 2);
+    Serial.println(wetweightAndRainValues);
   }
-  return command + ";" + ETcAndRainValues + ";";
+  return command + ";" + wetweightAndRainValues + ";";
 }
 
 void setup() {
@@ -152,7 +152,7 @@ void loop() {
     if(sendedMinutes != minutes){
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
-        pollCommand = queryETcAndRainValues(String(IRR_COMMAND));
+        pollCommand = queryWetweightAndRainValues(String(IRR_COMMAND));
         timeToAttempt = 60000;
       } else {
         pollCommand = POLL_COMMAND;
