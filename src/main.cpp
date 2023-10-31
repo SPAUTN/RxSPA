@@ -190,7 +190,7 @@ void loop() {
       if(!pollCommand.startsWith(IRR_COMMAND)) {
         httpResponse = sendFrameData(frame, STATION_TABLE, 3);
       } else {
-        httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")-2) + "}", STATION_TABLE, 3);
+        httpResponse = sendFrameData(frame.substring(0, frame.indexOf("etc")-2) + "}", STATION_TABLE, 3);
         httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("etc")-1, frame.indexOf("wetweight")-2) + "}", ETC_TABLE, 3);
         httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight")-1, frame.length()), WET_WEIGHT_TABLE, 3);
       }
