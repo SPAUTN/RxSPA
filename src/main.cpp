@@ -175,7 +175,7 @@ void loop() {
           Serial.println(rxData);
           frameReceived = true;
           frame = rxData;
-          logger(0, "Received frame data from SPA: " + frame, INFO_LEVEL);
+          logger(0, "Received frame data from SPA: '" + frame + "'", INFO_LEVEL);
         }
         if (actualMilis + timeToAttempt <= millis()) {
           Serial.printf("\nResending %s command...", &pollCommand);
