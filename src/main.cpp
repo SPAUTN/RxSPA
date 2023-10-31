@@ -80,7 +80,7 @@ int sendFrameData(String frame, String table, int attempts){
     httpResponseCode = http.POST(bodyRequest);
     String httpMessage = http.getString();
     httpMessage = httpMessage.substring(12, httpMessage.length()-2);
-    log_message = "Inserting on table: " + table + " - http message: \"" + httpMessage + "\" - on inserting frame";
+    log_message = "Inserting on table: " + table + " - http message: <" + httpMessage + "> - on inserting frame";
     Serial.print("HTTP Response code: ");
     Serial.print(httpResponseCode);
     Serial.print(" on attemp number ");
