@@ -21,8 +21,8 @@
 #define DB_PASS "Spautn2023pf"
 
 #define STATION_TABLE "spa.weatherstation"
-#define DRY_WEIGHT_TABLE "spa.dryweights"
 #define WET_WEIGHT_TABLE "spa.wetweights"
+#define ETC_TABLE "spa.etc"
 
 #define ERROR_LEVEL "ERROR"
 #define INFO_LEVEL "INFORMATION"
@@ -80,7 +80,7 @@ int sendFrameData(String frame, String table, int attempts){
     httpResponseCode = http.POST(bodyRequest);
     String httpMessage = http.getString();
     httpMessage = httpMessage.substring(12, httpMessage.length()-2);
-    log_message = "Inserting on table: " + table + " - http message: \"" + httpMessage + "\" - on inserting frame";
+    log_message = "Inserting on table: " + table + " - http message: <" + httpMessage + "> - on inserting frame";
     Serial.print("HTTP Response code: ");
     Serial.print(httpResponseCode);
     Serial.print(" on attemp number ");
@@ -175,7 +175,9 @@ void loop() {
           Serial.println(rxData);
           frameReceived = true;
           frame = rxData;
-          logger(0, "Received frame data from SPA: " + frame, INFO_LEVEL);
+          String frameLog = frame;
+          frameLog.replace("\"", "'");
+          logger(0, "Received frame data from SPA: '" + frameLog + "'", INFO_LEVEL);
         }
         if (actualMilis + timeToAttempt <= millis()) {
           Serial.printf("\nResending %s command...", &pollCommand);
@@ -190,8 +192,8 @@ void loop() {
       if(!pollCommand.startsWith(IRR_COMMAND)) {
         httpResponse = sendFrameData(frame, STATION_TABLE, 3);
       } else {
-        httpResponse = sendFrameData(frame.substring(0, frame.indexOf("dryweight")-2) + "}", STATION_TABLE, 3);
-        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("dryweight")-1, frame.indexOf("wetweight")-2) + "}", DRY_WEIGHT_TABLE, 3);
+        httpResponse = sendFrameData(frame.substring(0, frame.indexOf("etc")-2) + "}", STATION_TABLE, 3);
+        httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("etc")-1, frame.indexOf("wetweight")-2) + "}", ETC_TABLE, 3);
         httpResponse = sendFrameData("{" + frame.substring(frame.indexOf("wetweight")-1, frame.length()), WET_WEIGHT_TABLE, 3);
       }
       sendedHour = hour;
