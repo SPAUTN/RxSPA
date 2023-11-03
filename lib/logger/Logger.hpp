@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <HTTPClient.h>
+#include <thread>
 
 #define ERROR_LEVEL "ERROR"
 #define INFO_LEVEL "INFORMATION"
@@ -30,6 +31,11 @@ class Logger {
          * @param message The message to log
          * @param level The level of the message
          * @return int The http code of the request
+        */
+        int writeLog(int httpcode, String message, String level);
+        
+        /**
+         * @brief Log a message to the backend in a new thread (parallel)
         */
         int log(int httpcode, String message, String level);
         
