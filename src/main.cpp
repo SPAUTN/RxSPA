@@ -6,6 +6,7 @@
 #include <esp_sntp.h>
 #include <time.h>
 #include <esp_random.h>
+#include <Logger.hpp>
 
 #define AT_CONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65534" // 65534 for continuous receive, 65535 for continuous receive until one reception.
 #define AT_SEMICONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65535" 
@@ -24,15 +25,13 @@
 #define WET_WEIGHT_TABLE "spa.wetweights"
 #define ETC_TABLE "spa.etc"
 
-#define ERROR_LEVEL "ERROR"
-#define INFO_LEVEL "INFORMATION"
-#define DEBUG_LEVEL "DEBUG"
-
 WiFiUDP ntpUDP;
 WiFiManager wifiManager;
 HTTPClient http;
 String sendedHour = "xx";
 int sendedMinutes = 0;
+
+Logger logger;
 
 String getLocalTimeStamp() {
   time_t now;
@@ -46,21 +45,10 @@ String getLocalTimeStamp() {
   snprintf(timeString, sizeof(timeString), "%04d-%02d-%02dT%02d:%02d:%02d%", 
     timeInfo.tm_year + 1900, timeInfo.tm_mon + 1, timeInfo.tm_mday,
     timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec);
+
+  logger.config(String(LOG_HOST), String(DB_USER), String(DB_PASS));
   
   return timeString;
-}
-
-int logger(int httpcode, String message, String level){
-  String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"RXSPA\"}";
-  http.begin(LOG_HOST);
-  http.addHeader("Content-Type", "application/json");
-  http.setAuthorization(DB_USER, DB_PASS);
-  String bodyRequest = "{\"frame\": " + frame + "}";
-  Serial.print("Logger bodyRequest: ");
-  Serial.println(bodyRequest);
-  int httpResponseCode = http.POST(bodyRequest);
-  http.end();
-  return httpResponseCode;
 }
 
 int sendFrameData(String frame, String table, int attempts){
@@ -86,10 +74,10 @@ int sendFrameData(String frame, String table, int attempts){
     Serial.print(" on attemp number ");
     Serial.println(n_attemp);
     if(httpResponseCode != 201) {
-      logger(httpResponseCode, log_message, ERROR_LEVEL);
+      logger.log(httpResponseCode, log_message, ERROR_LEVEL);
       delay(500);
     } else {
-      logger(httpResponseCode, log_message, DEBUG_LEVEL);
+      logger.log(httpResponseCode, log_message, DEBUG_LEVEL);
     }
   } while (n_attemp > attempts && httpResponseCode != 201);
   
@@ -159,7 +147,7 @@ void loop() {
         timeToAttempt = 10000;
       }    
       String pollResponse = sendP2PPacket(Serial2, pollCommand);
-      logger(0, "Sended " + pollCommand + "to SPA.", INFO_LEVEL);
+      logger.log(0, "Sended " + pollCommand + "to SPA.", INFO_LEVEL);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
       boolean frameReceived = false;
       long actualMilis = millis();
@@ -177,11 +165,11 @@ void loop() {
           frame = rxData;
           String frameLog = frame;
           frameLog.replace("\"", "'");
-          logger(0, "Received frame data from SPA: '" + frameLog + "'", INFO_LEVEL);
+          logger.log(0, "Received frame data from SPA: '" + frameLog + "'", INFO_LEVEL);
         }
         if (actualMilis + timeToAttempt <= millis()) {
           Serial.printf("\nResending %s command...", &pollCommand);
-          logger(0, "Not frame received, resending command " + pollCommand + " to SPA.", ERROR_LEVEL);
+          logger.log(0, "Not frame received, resending command " + pollCommand + " to SPA.", ERROR_LEVEL);
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
           sendP2PPacket(Serial2, pollCommand);
           sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
