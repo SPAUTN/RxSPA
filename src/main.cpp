@@ -31,7 +31,7 @@
 WiFiUDP ntpUDP;
 WiFiManager wifiManager;
 HTTPClient http;
-String sendedHour = "xx";
+int sendedHour = 0;
 int sendedMinutes = 0;
 
 String getLocalTimeStamp() {
@@ -143,23 +143,23 @@ void loop() {
   int httpResponse;
   int timeToAttempt = 0;
   String currentTime = getLocalTimeStamp();
-  String hour = currentTime.substring(11,13);
+  int hour = atoi(currentTime.substring(11,13).c_str());
   int minutes = atoi(currentTime.substring(14,16).c_str());
   int seconds = atoi(currentTime.substring(18,19).c_str());
   String frame = "";
 
-  if(minutes % 2 == 0) {
-    if(sendedMinutes != minutes){
+  if(minutes == 0 && seconds == 0) {
+    if(sendedHour != hour){
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
         pollCommand = queryWetweightAndRainValues(String(IRR_COMMAND));
         timeToAttempt = 60000;
       } else {
         pollCommand = POLL_COMMAND;
-        timeToAttempt = 10000;
+        timeToAttempt = 15000;
       }    
-      String pollResponse = sendP2PPacket(Serial2, pollCommand);
       logger(0, "Sended " + pollCommand + "to SPA.", INFO_LEVEL);
+      String pollResponse = sendP2PPacket(Serial2, pollCommand);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
       boolean frameReceived = false;
       long actualMilis = millis();
