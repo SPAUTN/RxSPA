@@ -31,7 +31,7 @@
 WiFiUDP ntpUDP;
 WiFiManager wifiManager;
 HTTPClient http;
-int sendedHour = 0;
+String sendedHour = "xx";
 int sendedMinutes = 0;
 
 String getLocalTimeStamp() {
@@ -143,7 +143,7 @@ void loop() {
   int httpResponse;
   int timeToAttempt = 0;
   String currentTime = getLocalTimeStamp();
-  int hour = atoi(currentTime.substring(11,13).c_str());
+  String hour = currentTime.substring(11,13);
   int minutes = atoi(currentTime.substring(14,16).c_str());
   int seconds = atoi(currentTime.substring(18,19).c_str());
   String frame = "";
