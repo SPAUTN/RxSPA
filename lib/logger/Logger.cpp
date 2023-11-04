@@ -8,8 +8,6 @@ void Logger::config(String logHost, String user, String pass) {
     this -> pass = pass;
 }
 
-
-
 int Logger::log(int httpcode, String message, String level){
     // Execute the following code in a new thread
     String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"RXSPA\"}";
