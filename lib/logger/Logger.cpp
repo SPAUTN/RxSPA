@@ -10,7 +10,7 @@ void Logger::config(String logHost, String user, String pass) {
 
 
 
-int Logger::writeLog(int httpcode, String message, String level){
+int Logger::log(int httpcode, String message, String level){
     // Execute the following code in a new thread
     String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"RXSPA\"}";
     http.begin(this->logHost);
@@ -24,7 +24,7 @@ int Logger::writeLog(int httpcode, String message, String level){
     return httpResponseCode;
 }
 
-int Logger::log(int httpcode, String message, String level){
+int Logger::logDaemon(int httpcode, String message, String level){
     // Execute the log method in a new thread
     std::thread t1(&Logger::writeLog, this, httpcode, message, level);
     t1.detach();

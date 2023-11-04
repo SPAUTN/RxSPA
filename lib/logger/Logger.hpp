@@ -32,12 +32,12 @@ class Logger {
          * @param level The level of the message
          * @return int The http code of the request
         */
-        int writeLog(int httpcode, String message, String level);
+        int log(int httpcode, String message, String level);
         
         /**
          * @brief Log a message to the backend in a new thread (parallel)
         */
-        int log(int httpcode, String message, String level);
+        int logDaemon(int httpcode, String message, String level);
         
     private:
         String logHost;
