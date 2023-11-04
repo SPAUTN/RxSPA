@@ -146,7 +146,7 @@ void loop() {
         pollCommand = POLL_COMMAND;
         timeToAttempt = 15000;
       }    
-      logger.log(0, "Sending " + pollCommand + "to SPA.", INFO_LEVEL);
+      logger.log(0, "Sending " + pollCommand + " to SPA.", INFO_LEVEL);
       String pollResponse = sendP2PPacket(Serial2, pollCommand);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
       boolean frameReceived = false;
