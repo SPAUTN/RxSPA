@@ -136,18 +136,18 @@ void loop() {
   int seconds = atoi(currentTime.substring(18,19).c_str());
   String frame = "";
 
-  if(minutes % 2 == 0) {
-    if(sendedMinutes != minutes){
+  if(minutes == 0 && seconds == 0) {
+    if(sendedHour != hour){
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
         pollCommand = queryWetweightAndRainValues(String(IRR_COMMAND));
         timeToAttempt = 60000;
       } else {
         pollCommand = POLL_COMMAND;
-        timeToAttempt = 10000;
+        timeToAttempt = 15000;
       }    
+      logger.log(0, "Sending " + pollCommand + "to SPA.", INFO_LEVEL);
       String pollResponse = sendP2PPacket(Serial2, pollCommand);
-      logger.log(0, "Sended " + pollCommand + "to SPA.", INFO_LEVEL);
       String listeningResponse = sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
       boolean frameReceived = false;
       long actualMilis = millis();
