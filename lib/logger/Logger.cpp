@@ -26,7 +26,7 @@ int Logger::log(int httpcode, String message, String level){
 
 int Logger::logDaemon(int httpcode, String message, String level){
     // Execute the log method in a new thread
-    std::thread t1(&Logger::writeLog, this, httpcode, message, level);
+    std::thread t1(&Logger::log, this, httpcode, message, level);
     t1.detach();
     return 0;
 }
