@@ -43,9 +43,6 @@ String getLocalTimeStamp() {
   snprintf(timeString, sizeof(timeString), "%04d-%02d-%02dT%02d:%02d:%02d%", 
     timeInfo.tm_year + 1900, timeInfo.tm_mon + 1, timeInfo.tm_mday,
     timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec);
-
-  logger.config(String(LOG_HOST), String(DB_USER), String(DB_PASS));
-  restCall.config(String(DB_HOST), String(DB_USER), String(DB_PASS));
   
   return timeString;
 }
@@ -60,6 +57,9 @@ void setup() {
   Serial.begin(115200);
   Serial2.begin(115200);
   wifiManager.autoConnect();
+  logger.config(String(LOG_HOST), String(DB_USER), String(DB_PASS));
+  restCall.config(String(DB_HOST), String(DB_USER), String(DB_PASS));
+
   String atCommandResetResponse = sendATCommand(Serial2, AT_RESET);
   String atConfigSetP2PResponse = sendATCommand(Serial2, AT_P2P_CONFIG_SET);
   String atConfigGetP2PResponse = sendATCommand(Serial2, AT_P2P_CONFIG_GET);
