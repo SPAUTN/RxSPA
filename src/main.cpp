@@ -109,7 +109,7 @@ void loop() {
         }
         if (actualMilis + timeToAttempt <= millis()) {
           Serial.printf("\nResending %s command...", &pollCommand);
-          logger.error(0, "Not frame received, resending command " + pollCommand + " to SPA.")
+          logger.error(0, "Not frame received, resending command " + pollCommand + " to SPA.");
           sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
           sendP2PPacket(Serial2, pollCommand);
           sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
