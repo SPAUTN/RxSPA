@@ -11,10 +11,6 @@
 
 class Logger {
     public:
-        /**
-         * @brief Construct a new Logger object
-        */
-        Logger();
 
         /**
          * @brief Configure the logger
@@ -40,6 +36,10 @@ class Logger {
         */
         int logDaemon(int httpcode, String message, String level);
         
+        int error(int httpCode, String message);
+        int info(int httpCode, String message);
+        int debug(int httpCode, String message);
+
     private:
         String logHost;
         String user;
