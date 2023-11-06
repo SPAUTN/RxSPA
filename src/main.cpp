@@ -12,9 +12,7 @@
 #define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
 
-#define DB_HOST "https://spa-backend-81f8-dev.fl0.io/insert"
-#define LOG_HOST "https://spa-backend-81f8-dev.fl0.io/log"
-#define ETCRAIN_HOST "https://spa-backend-81f8-dev.fl0.io/etcrain"
+#define API_URL "https://spa-backend-81f8-dev.fl0.io"
 
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
@@ -41,8 +39,8 @@ void setup() {
   Serial.begin(115200);
   Serial2.begin(115200);
   wifiManager.autoConnect();
-  logger.config(String(LOG_HOST), String(DB_USER), String(DB_PASS));
-  restCall.config(String(DB_HOST), String(DB_USER), String(DB_PASS));
+  logger.config(String(API_URL) + String(LOG_CONTEXT), String(DB_USER), String(DB_PASS));
+  restCall.config(String(API_URL), String(DB_USER), String(DB_PASS));
 
   String atCommandResetResponse = atFunctions.sendATCommand(Serial2, AT_RESET);
   String atConfigSetP2PResponse = atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_SET);
