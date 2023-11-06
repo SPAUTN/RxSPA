@@ -21,11 +21,11 @@ class RestCall {
         /**
          * @brief Configure the rest call
          * 
-         * @param dbHost The host to send the data
+         * @param apiUrl The host to send the data
          * @param dbUser The user to authenticate on the host
          * @param dbPass The password to authenticate on the host
         */
-        void config(String dbHost, String dbUser, String dbPass);        
+        void config(String apiUrl, String dbUser, String dbPass);        
         
         /**
          * @brief Get the weight and rain values from the backend
@@ -76,7 +76,7 @@ class RestCall {
         int getResponseCode();
 
     private:
-        String dbHost;
+        String apiUrl;
         String dbUser;
         String dbPass;
         HTTPClient http;
