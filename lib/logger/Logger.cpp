@@ -1,7 +1,5 @@
 #include "Logger.hpp"
 
-Logger::Logger() {}
-
 void Logger::config(String logHost, String user, String pass) {
     this -> logHost = logHost;
     this -> user = user;
@@ -20,6 +18,18 @@ int Logger::log(int httpcode, String message, String level){
     int httpResponseCode = http.POST(bodyRequest);
     http.end();
     return httpResponseCode;
+}
+
+int Logger::error(int httpcode, String message) {
+    return this -> log(httpcode, message, ERROR_LEVEL);
+}
+
+int Logger::info(int httpcode, String message) {
+    return this -> log(httpcode, message, INFO_LEVEL);
+}
+
+int Logger::debug(int httpcode, String message) {
+    return this -> log(httpcode, message, DEBUG_LEVEL);
 }
 
 int Logger::logDaemon(int httpcode, String message, String level){
