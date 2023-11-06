@@ -9,9 +9,6 @@
 #include <Logger.hpp>
 #include <RestCall.hpp>
 
-#define AT_CONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65534" // 65534 for continuous receive, 65535 for continuous receive until one reception.
-#define AT_SEMICONTINUOUS_PRECV_CONFIG_SET "AT+PRECV=65535" 
-
 #define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
 
