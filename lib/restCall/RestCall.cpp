@@ -26,7 +26,7 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
     int n_attemp = 0;
     Serial.print("Frame to send: ");
     Serial.println(frame);
-    http.begin(this -> dbHost);
+    http.begin(this->dbHost + String(INSERT_CONTEXT));
     http.addHeader("Content-Type", "application/json");
     http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
     String bodyRequest = "{\"table\": \"" + table + "\",\"frame\": " + frame + "}";
@@ -54,7 +54,7 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
 String RestCall::getWeightAndRain(String command) {
     HTTPClient http;
     String wetweightAndRainValues = "";
-    http.begin(this->dbHost + ETCRAIN_CONTEXT);
+    http.begin(this->dbHost + String(ETCRAIN_CONTEXT));
     http.addHeader("Content-Type", "application/json");
     http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
     int httpCode = http.GET();
