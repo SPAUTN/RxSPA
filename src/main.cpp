@@ -17,6 +17,9 @@
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
 
+#define ETC "etc"
+#define WET_WEIGHT "wetweight"
+
 WiFiUDP ntpUDP;
 WiFiManager wifiManager;
 HTTPClient http;
@@ -97,22 +100,26 @@ void loop() {
           actualMilis = millis();
         }
       }
-      
-      if(!pollCommand.startsWith(IRR_COMMAND)) {
-        restCallResponse = restCall.sendFrameData(frame, STATION_TABLE, 3);
-        logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel());
+      if(!frame.startsWith("ERROR")) {
+        if(!pollCommand.startsWith(IRR_COMMAND)) {
+          restCallResponse = restCall.sendFrameData(frame, STATION_TABLE, 3);
+          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+        } else {
+          restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-2) + "}", STATION_TABLE, 3);
+          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+          
+          restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-2) + "}", ETC_TABLE, 3);
+          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+          
+          restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()), WET_WEIGHT_TABLE, 3);
+          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+        }
+        sendedHour = hour;
+        sendedMinutes = minutes;
       } else {
-        restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf("etc")-2) + "}", STATION_TABLE, 3);
-        logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel());
-        
-        restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf("etc")-1, frame.indexOf("wetweight")-2) + "}", ETC_TABLE, 3);
-        logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel());
-        
-        restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf("wetweight")-1, frame.length()), WET_WEIGHT_TABLE, 3);
-        logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel());
+        logger.error(0, frame, "ADCSPA");
       }
-      sendedHour = hour;
-      sendedMinutes = minutes;
+      
     }
   }
 }
