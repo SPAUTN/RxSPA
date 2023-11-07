@@ -100,24 +100,26 @@ void loop() {
           actualMilis = millis();
         }
       }
-      if(frame.startsWith("ERROR")) {
+      if(!frame.startsWith("ERROR")) {
+        if(!pollCommand.startsWith(IRR_COMMAND)) {
+          restCallResponse = restCall.sendFrameData(frame, STATION_TABLE, 3);
+          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+        } else {
+          restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-2) + "}", STATION_TABLE, 3);
+          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+          
+          restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-2) + "}", ETC_TABLE, 3);
+          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+          
+          restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()), WET_WEIGHT_TABLE, 3);
+          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+        }
+        sendedHour = hour;
+        sendedMinutes = minutes;
+      } else {
         logger.error(0, frame, "ADCSPA");
       }
-      if(!pollCommand.startsWith(IRR_COMMAND)) {
-        restCallResponse = restCall.sendFrameData(frame, STATION_TABLE, 3);
-        logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
-      } else {
-        restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-2) + "}", STATION_TABLE, 3);
-        logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
-        
-        restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-2) + "}", ETC_TABLE, 3);
-        logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
-        
-        restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()), WET_WEIGHT_TABLE, 3);
-        logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
-      }
-      sendedHour = hour;
-      sendedMinutes = minutes;
+      
     }
   }
 }
