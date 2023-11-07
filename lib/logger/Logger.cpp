@@ -6,9 +6,9 @@ void Logger::config(String logHost, String user, String pass) {
     this -> pass = pass;
 }
 
-int Logger::log(int httpcode, String message, String level){
+int Logger::log(int httpcode, String message, String level, String source){
     // Execute the following code in a new thread
-    String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"RXSPA\"}";
+    String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"" + source + "\"}";
     http.begin(this->logHost);
     http.addHeader("Content-Type", "application/json");
     http.setAuthorization(this->user.c_str(), this->pass.c_str());
@@ -20,21 +20,14 @@ int Logger::log(int httpcode, String message, String level){
     return httpResponseCode;
 }
 
-int Logger::error(int httpcode, String message) {
-    return this -> log(httpcode, message, ERROR_LEVEL);
+int Logger::error(int httpcode, String message, String source) {
+    return this -> log(httpcode, message, ERROR_LEVEL, source);
 }
 
-int Logger::info(int httpcode, String message) {
-    return this -> log(httpcode, message, INFO_LEVEL);
+int Logger::info(int httpcode, String message, String source) {
+    return this -> log(httpcode, message, INFO_LEVEL, source);
 }
 
-int Logger::debug(int httpcode, String message) {
-    return this -> log(httpcode, message, DEBUG_LEVEL);
-}
-
-int Logger::logDaemon(int httpcode, String message, String level){
-    // Execute the log method in a new thread
-    std::thread t1(&Logger::log, this, httpcode, message, level);
-    t1.detach();
-    return 0;
+int Logger::debug(int httpcode, String message, String source) {
+    return this -> log(httpcode, message, DEBUG_LEVEL, source);
 }

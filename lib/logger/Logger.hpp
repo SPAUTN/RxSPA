@@ -6,6 +6,8 @@
 #define INFO_LEVEL "INFORMATION"
 #define DEBUG_LEVEL "DEBUG"
 
+#define RXSPA "RXSPA"
+
 #ifndef LOGGER_H
 #define LOGGER_H
 
@@ -29,16 +31,15 @@ class Logger {
          * @param level The level of the message
          * @return int The http code of the request
         */
-        int log(int httpcode, String message, String level);
+        int log(int httpcode, String message, String level, String source);
         
         /**
          * @brief Log a message to the backend in a new thread (parallel)
         */
-        int logDaemon(int httpcode, String message, String level);
         
-        int error(int httpCode, String message);
-        int info(int httpCode, String message);
-        int debug(int httpCode, String message);
+        int error(int httpCode, String message, String source = RXSPA);
+        int info(int httpCode, String message, String source = RXSPA);
+        int debug(int httpCode, String message, String source = RXSPA);
 
     private:
         String logHost;
