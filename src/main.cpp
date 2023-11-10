@@ -105,7 +105,7 @@ void loop() {
           restCallResponse = restCall.sendFrameData(frame, STATION_TABLE, 3);
           logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
         } else {
-          restCallResponse = restCall.sendFrameData(String(IRR_COMMAND) + frame.substring(0, frame.indexOf(ETC)-1), STATION_TABLE, 3);
+          restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-1), STATION_TABLE, 3);
           logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
           
           restCallResponse = restCall.sendFrameData(String(IRR_COMMAND) + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-1) , ETC_TABLE, 3);
