@@ -8,11 +8,11 @@ void Logger::config(String logHost, String user, String pass) {
 
 int Logger::log(int httpcode, String message, String level, String source){
     // Execute the following code in a new thread
-    String frame = "{\"httpcode\": \"" + String(httpcode) + "\",\"message\": \"" + message + "\",\"level\":\"" + level + "\",\"source\":\"" + source + "\"}";
+    String frame = "{\"hc\": \"" + String(httpcode) + "\",\"msg\": \"" + message + "\",\"lv\":\"" + level + "\",\"src\":\"" + source + "\"}";
     http.begin(this->logHost);
     http.addHeader("Content-Type", "application/json");
     http.setAuthorization(this->user.c_str(), this->pass.c_str());
-    String bodyRequest = "{\"frame\": " + frame + "}";
+    String bodyRequest = "{\"fr\": " + frame + "}";
     Serial.print("Logger bodyRequest: ");
     Serial.println(bodyRequest);
     int httpResponseCode = http.POST(bodyRequest);
