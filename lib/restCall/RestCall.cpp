@@ -29,7 +29,7 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
     http.begin(this->apiUrl + String(INSERT_CONTEXT));
     http.addHeader("Content-Type", "application/json");
     http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
-    String bodyRequest = "{\"tb\": \"" + table + "\",\"fr\": " + frame + "}";
+    String bodyRequest = "{\"tb\": \"" + table + "\",\"fr\": \"" + frame + "\"}";
     Serial.print("Body request: ");
     int httpCode;
     String log_message;
