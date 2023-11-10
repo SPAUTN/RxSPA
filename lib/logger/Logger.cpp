@@ -8,7 +8,10 @@ void Logger::config(String logHost, String user, String pass) {
 
 int Logger::log(int httpcode, String message, String level, String source){
     // Execute the following code in a new thread
-    String frame = "{\"hc\": \"" + String(httpcode) + "\",\"msg\": \"" + message + "\",\"lv\":\"" + level + "\",\"src\":\"" + source + "\"}";
+    String frame =  ">hc:" + String(httpcode) +
+                    ";msg:" + message +
+                    ";lv:" + level +
+                    ";src:" + source + "<";
     http.begin(this->logHost);
     http.addHeader("Content-Type", "application/json");
     http.setAuthorization(this->user.c_str(), this->pass.c_str());
