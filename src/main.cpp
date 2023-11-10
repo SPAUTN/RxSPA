@@ -62,7 +62,7 @@ void loop() {
   String frame = "";
 
   if(minutes == 0 && seconds == 0) {
-    if(sendedHour != hour){
+    if(sendedHour != hour) {
       Serial.println("Polling to SPA...");
       if(currentTime.substring(11,19) == "00:00:00"){
         pollCommand = restCall.getWeightAndRain(String(IRR_COMMAND));
