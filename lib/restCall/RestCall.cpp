@@ -24,20 +24,25 @@ int RestCall::getResponseCode() {
 
 String RestCall::sendFrameData(String frame, String table, int attempts){
     int n_attemp = 0;
+    this -> http.clearAllCookies();
     Serial.print("Frame to send: ");
     Serial.println(frame);
-    http.begin(this->apiUrl + String(INSERT_CONTEXT));
-    http.addHeader("Content-Type", "application/json");
-    http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
     String bodyRequest = "{\"tb\": \"" + table + "\",\"fr\": \"" + frame + "\"}";
     Serial.print("Body request: ");
+    do {
+        this -> http.begin(this->apiUrl + String(INSERT_CONTEXT));
+        this -> http.addHeader("Content-Type", "application/json");
+        this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
+    } while(!http.connected());
+    
     int httpCode;
     String log_message;
+    
     do {
         n_attemp ++;
         Serial.println(bodyRequest);
         httpCode = http.POST(bodyRequest);
-        String httpMessage = http.getString();
+        String httpMessage = this -> http.getString();
         httpMessage = httpMessage.substring(12, httpMessage.length()-2);
         log_message = "Inserting on table: " + table + " - http message: <" + httpMessage + "> - on inserting frame";
         Serial.print("HTTP Response code: ");
@@ -45,7 +50,7 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
         Serial.print(" on attemp number ");
         Serial.println(n_attemp);
     } while (n_attemp > attempts && httpCode != 201);
-    http.end();
+    this -> http.end();
     this -> setResponseCode(httpCode);
     this -> setDebugLevel( httpCode == 201 ? INFO_LEVEL : ERROR_LEVEL );
     return log_message + "http response code: " + String(httpCode) + " on attempts: " + String(n_attemp);
@@ -54,14 +59,17 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
 String RestCall::getWeightAndRain(String command) {
     HTTPClient http;
     String wetweightAndRainValues = "";
-    http.begin(this->apiUrl + String(ETCRAIN_CONTEXT));
-    http.addHeader("Content-Type", "application/json");
-    http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
-    int httpCode = http.GET();
+    do {
+        this -> http.begin(this->apiUrl + String(ETCRAIN_CONTEXT));
+        this -> http.addHeader("Content-Type", "application/json");
+        this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
+    } while (!http.connected());
+    
+    int httpCode = this -> http.GET();
 
     if (httpCode == 200) {
         String responseBody = http.getString();
-        http.end();
+        this -> http.end();
         Serial.print("Query received: ");
         Serial.println(responseBody);
         const size_t capacity = JSON_OBJECT_SIZE(2) + 40;

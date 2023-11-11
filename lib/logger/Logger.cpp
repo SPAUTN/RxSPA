@@ -12,14 +12,17 @@ int Logger::log(int httpcode, String message, String level, String source){
                     ";msg:" + message +
                     ";lv:" + level +
                     ";src:" + source + "<\"";
-    http.begin(this->logHost);
-    http.addHeader("Content-Type", "application/json");
-    http.setAuthorization(this->user.c_str(), this->pass.c_str());
     String bodyRequest = "{\"fr\": " + frame + "}";
-    Serial.print("Logger bodyRequest: ");
-    Serial.println(bodyRequest);
-    int httpResponseCode = http.POST(bodyRequest);
-    http.end();
+    this -> http.clearAllCookies();
+    do {
+        this -> http.begin(this->logHost);
+        this -> http.addHeader("Content-Type", "application/json");
+        this -> http.setAuthorization(this->user.c_str(), this->pass.c_str());
+        Serial.print("Logger bodyRequest: ");
+        Serial.println(bodyRequest);
+    } while(!http.connected());
+    int httpResponseCode = this -> http.POST(bodyRequest);
+    this -> http.end();
     return httpResponseCode;
 }
 
