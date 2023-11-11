@@ -29,11 +29,9 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
     Serial.println(frame);
     String bodyRequest = "{\"tb\": \"" + table + "\",\"fr\": \"" + frame + "\"}";
     Serial.print("Body request: ");
-    do {
-        this -> http.begin(this->apiUrl + String(INSERT_CONTEXT));
-        this -> http.addHeader("Content-Type", "application/json");
-        this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
-    } while(!http.connected());
+    this -> http.begin(this->apiUrl + String(INSERT_CONTEXT));
+    this -> http.addHeader("Content-Type", "application/json");
+    this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
     
     int httpCode;
     String log_message;
@@ -60,11 +58,9 @@ String RestCall::getWeightAndRain(String command) {
     HTTPClient http;
     String wetweightAndRainValues = "";
     this -> http.clearAllCookies();
-    do {
-        this -> http.begin(this->apiUrl + String(ETCRAIN_CONTEXT));
-        this -> http.addHeader("Content-Type", "application/json");
-        this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
-    } while (!http.connected());
+    this -> http.begin(this->apiUrl + String(ETCRAIN_CONTEXT));
+    this -> http.addHeader("Content-Type", "application/json");
+    this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
     
     int httpCode = this -> http.GET();
 
