@@ -12,7 +12,7 @@
 #define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
 
-#define API_URL "https://spa-backend-81f8-dev.fl0.io"
+#define API_URL "https://spautn.1.us-1.fl0.io/"
 
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
