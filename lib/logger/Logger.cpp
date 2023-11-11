@@ -7,20 +7,26 @@ void Logger::config(String logHost, String user, String pass) {
 }
 
 int Logger::log(int httpcode, String message, String level, String source){
-    // Execute the following code in a new thread
+    int httpResponseCode = 0;
     String frame =  "\">hc:" + String(httpcode) +
                     ";msg:" + message +
                     ";lv:" + level +
                     ";src:" + source + "<\"";
     String bodyRequest = "{\"fr\": " + frame + "}";
-    this -> http.clearAllCookies();
-    this -> http.begin(this->logHost);
-    this -> http.addHeader("Content-Type", "application/json");
-    this -> http.setAuthorization(this->user.c_str(), this->pass.c_str());
-    Serial.print("Logger bodyRequest: ");
-    Serial.println(bodyRequest);
-    int httpResponseCode = this -> http.POST(bodyRequest);
-    this -> http.end();
+    try {
+        this -> http.clearAllCookies();
+        this -> http.begin(this->logHost);
+        this -> http.addHeader("Content-Type", "application/json");
+        this -> http.setAuthorization(this->user.c_str(), this->pass.c_str());
+        Serial.print("Logger bodyRequest: ");
+        Serial.println(bodyRequest);
+        httpResponseCode = this -> http.POST(bodyRequest);
+        this -> http.end();
+    } catch (const std::exception& e) {
+        httpResponseCode = -1;
+        Serial.println(e.what());
+        this -> http.end();
+    }
     return httpResponseCode;
 }
 
