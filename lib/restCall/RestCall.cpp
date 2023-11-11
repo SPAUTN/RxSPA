@@ -59,6 +59,7 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
 String RestCall::getWeightAndRain(String command) {
     HTTPClient http;
     String wetweightAndRainValues = "";
+    this -> http.clearAllCookies();
     do {
         this -> http.begin(this->apiUrl + String(ETCRAIN_CONTEXT));
         this -> http.addHeader("Content-Type", "application/json");
