@@ -20,9 +20,7 @@
 #define ETC "etc"
 #define WET_WEIGHT "wetweight"
 
-WiFiUDP ntpUDP;
 WiFiManager wifiManager;
-HTTPClient http;
 String sendedHour = "xx";
 int sendedMinutes = 0;
 
