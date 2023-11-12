@@ -36,7 +36,7 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
         this -> http.addHeader("Content-Type", "application/json");
         this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
         do {
-            n_attemp ++;
+            n_attemp++;
             Serial.println(bodyRequest);
             httpCode = http.POST(bodyRequest);
             String httpMessage = this -> http.getString();
@@ -48,6 +48,7 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
             Serial.println(n_attemp);
         } while (n_attemp > attempts && httpCode != 201);
         this -> http.end();
+        Serial.printf("ERROR: %s\n - Reattempting...",log_message);
         this -> setResponseCode(httpCode);
         this -> setDebugLevel( httpCode == 201 ? INFO_LEVEL : ERROR_LEVEL );
     } catch (const std::exception& e) {
