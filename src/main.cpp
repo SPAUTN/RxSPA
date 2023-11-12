@@ -1,15 +1,11 @@
 #include <Arduino.h>
-#include <ArduinoJson.h>
 #include <WiFiManager.h>
-#include <HTTPClient.h>
 #include <Utils.hpp>
 #include <esp_sntp.h>
 #include <time.h>
-#include <esp_random.h>
 #include <Logger.hpp>
 #include <RestCall.hpp>
 
-#define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
 
 #define API_URL "https://spautn.1.us-1.fl0.io"
