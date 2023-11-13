@@ -8,7 +8,6 @@
 #include <esp_random.h>
 #include <Logger.hpp>
 #include <RestCall.hpp>
-#include <CronAlarms.h>
 
 #define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
@@ -25,6 +24,7 @@ WiFiUDP ntpUDP;
 WiFiManager wifiManager;
 HTTPClient http;
 String sendedHour = "xx";
+String sendedDay = "xx";
 int sendedMinutes = 0;
 
 Logger logger;
@@ -111,14 +111,23 @@ void setup() {
   String atConfigSetP2PResponse = atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_SET);
   String atConfigGetP2PResponse = atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_GET);
   String atConfigContRecvResponse = atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
-
-  // minute, hour, day of month, month, day of week
-  Cron.create("0 * * * *", pollAlarm, false); // Poll every hour 
-
-  // minute, hour, day of month, month, day of week
-  Cron.create("0 0 * * *", irrAlarm, false); // Irr every day at 00:00
 }
 
 void loop() {
-  delay(1000);
+  String day = timestamp.getDay();
+  String hour = timestamp.getHours();
+  String minutes = timestamp.getMinutes();
+  String seconds = timestamp.getSeconds();
+
+  // Execute pollAlarm every one hour
+  if (hour != sendedHour) {
+    sendedHour = hour;
+    pollAlarm();
+  }
+
+  // Execute irrAlarm once a day at 00 hs
+  if (hour == "00" && sendedDay != day) {
+    sendedDay = day;
+    irrAlarm();
+  }
 }
