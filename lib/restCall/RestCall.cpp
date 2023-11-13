@@ -46,9 +46,11 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
             Serial.print(httpCode);
             Serial.print(" on attemp number ");
             Serial.println(n_attemp);
+            if(httpCode != 201) {
+                Serial.printf("ERROR: %d\n - Reattempting...",httpCode);
+            }
         } while (n_attemp > attempts && httpCode != 201);
         this -> http.end();
-        Serial.printf("ERROR: %s\n - Reattempting...",log_message);
         this -> setResponseCode(httpCode);
         this -> setDebugLevel( httpCode == 201 ? INFO_LEVEL : ERROR_LEVEL );
     } catch (const std::exception& e) {
