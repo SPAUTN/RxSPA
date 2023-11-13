@@ -33,11 +33,11 @@ ATFunctions atFunctions;
 HexFunctions hexFunctions;
 Timestamp timestamp;
 
-void sendPollCommand(String pollCommand, Logger logger, int timeToAttempt) {
+void sendPollCommand(String pollCommand, Logger *logger, int timeToAttempt) {
   String frame = "";
   String restCallResponse;
   Serial.println("Polling to SPA...");
-  logger.info(0, "Sending " + pollCommand + " to SPA.");
+  logger -> info(0, "Sending " + pollCommand + " to SPA.");
   String pollResponse = atFunctions.sendP2PPacket(Serial2, pollCommand);
   String listeningResponse = atFunctions.sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
   boolean frameReceived = false;
@@ -55,11 +55,11 @@ void sendPollCommand(String pollCommand, Logger logger, int timeToAttempt) {
       frame = rxData;
       String frameLog = frame;
       frameLog.replace("\"", "'");
-      logger.info(0, "Received frame data from SPA: '" + frameLog + "'");
+      logger -> info(0, "Received frame data from SPA: '" + frameLog + "'");
     }
     if (actualMilis + timeToAttempt <= millis()) {
       Serial.printf("\nResending %s command...", &pollCommand);
-      logger.error(0, "Not frame received, resending command " + pollCommand + " to SPA.");
+      logger -> error(0, "Not frame received, resending command " + pollCommand + " to SPA.");
       atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
       atFunctions.sendP2PPacket(Serial2, pollCommand);
       atFunctions.sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
@@ -69,28 +69,28 @@ void sendPollCommand(String pollCommand, Logger logger, int timeToAttempt) {
   if(!frame.startsWith("ERROR")) {
     if(!pollCommand.startsWith(IRR_COMMAND)) {
       restCallResponse = restCall.sendFrameData(frame, STATION_TABLE, 3);
-      logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+      logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
     } else {
       restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-2) + "}", STATION_TABLE, 3);
-      logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+      logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
       
       restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-2) + "}", ETC_TABLE, 3);
-      logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+      logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
       
       restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()), WET_WEIGHT_TABLE, 3);
-      logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+      logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
     }
   } else {
-    logger.error(0, frame, "ADCSPA");
+    logger -> error(0, frame, "ADCSPA");
   }
 }
 
 void pollAlarm() {
-  sendPollCommand(POLL_COMMAND, logger, 10000);
+  sendPollCommand(POLL_COMMAND, &logger, 10000);
 }
 
 void irrAlarm() {
-  sendPollCommand(IRR_COMMAND, logger, 10000);
+  sendPollCommand(IRR_COMMAND, &logger, 10000);
 }
 
 
