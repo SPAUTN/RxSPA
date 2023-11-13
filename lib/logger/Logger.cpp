@@ -24,7 +24,7 @@ int Logger::log(int httpcode, String message, String level, String source){
             this -> http.setAuthorization(this->user.c_str(), this->pass.c_str());
             Serial.print("Logger bodyRequest: ");
             Serial.println(bodyRequest);
-            Serial.printf("Attempt nº: %d", n_attempt);
+            Serial.printf("Attempt nº: %d.\n", n_attempt);
             httpResponseCode = this -> http.POST(bodyRequest);
             this -> http.end();
         } while(n_attempt > (this -> attempts) && httpResponseCode != 201);

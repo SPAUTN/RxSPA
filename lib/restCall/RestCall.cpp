@@ -44,8 +44,7 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
             log_message = "Inserting on table: " + table + " - http message: <" + httpMessage + "> - on inserting frame";
             Serial.print("HTTP Response code: ");
             Serial.print(httpCode);
-            Serial.print(" on attemp number ");
-            Serial.println(n_attemp);
+            Serial.printf(" on attemp number %d. ", n_attemp);
             if(httpCode != 201) {
                 Serial.printf("ERROR: %d\n - Reattempting...",httpCode);
             }
