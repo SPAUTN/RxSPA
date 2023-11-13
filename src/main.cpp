@@ -8,6 +8,7 @@
 #include <esp_random.h>
 #include <Logger.hpp>
 #include <RestCall.hpp>
+#include <CronAlarms.h>
 
 #define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
@@ -32,6 +33,67 @@ ATFunctions atFunctions;
 HexFunctions hexFunctions;
 Timestamp timestamp;
 
+void sendPollCommand(String pollCommand, Logger logger, int timeToAttempt) {
+  String frame = "";
+  String restCallResponse;
+  Serial.println("Polling to SPA...");
+  logger.info(0, "Sending " + pollCommand + " to SPA.");
+  String pollResponse = atFunctions.sendP2PPacket(Serial2, pollCommand);
+  String listeningResponse = atFunctions.sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
+  boolean frameReceived = false;
+  long actualMilis = millis();
+  Serial.print("Waiting response:");
+  while (!frameReceived){
+    Serial.print(".");
+    delay(200);
+    if (Serial2.available() > 0) {
+      String rxData = atFunctions.readSerial(Serial2);
+      rxData = hexFunctions.hexToASCII(rxData.substring(rxData.lastIndexOf(':')+1));
+      Serial.print("\nReceived data: ");
+      Serial.println(rxData);
+      frameReceived = true;
+      frame = rxData;
+      String frameLog = frame;
+      frameLog.replace("\"", "'");
+      logger.info(0, "Received frame data from SPA: '" + frameLog + "'");
+    }
+    if (actualMilis + timeToAttempt <= millis()) {
+      Serial.printf("\nResending %s command...", &pollCommand);
+      logger.error(0, "Not frame received, resending command " + pollCommand + " to SPA.");
+      atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
+      atFunctions.sendP2PPacket(Serial2, pollCommand);
+      atFunctions.sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
+      actualMilis = millis();
+    }
+  }
+  if(!frame.startsWith("ERROR")) {
+    if(!pollCommand.startsWith(IRR_COMMAND)) {
+      restCallResponse = restCall.sendFrameData(frame, STATION_TABLE, 3);
+      logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+    } else {
+      restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-2) + "}", STATION_TABLE, 3);
+      logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+      
+      restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-2) + "}", ETC_TABLE, 3);
+      logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+      
+      restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()), WET_WEIGHT_TABLE, 3);
+      logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
+    }
+  } else {
+    logger.error(0, frame, "ADCSPA");
+  }
+}
+
+void pollAlarm() {
+  sendPollCommand(POLL_COMMAND, logger, 10000);
+}
+
+void irrAlarm() {
+  sendPollCommand(IRR_COMMAND, logger, 10000);
+}
+
+
 void setup() {
   // Internal clock
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
@@ -49,77 +111,14 @@ void setup() {
   String atConfigSetP2PResponse = atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_SET);
   String atConfigGetP2PResponse = atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_GET);
   String atConfigContRecvResponse = atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
+
+  // minute, hour, day of month, month, day of week
+  Cron.create("0 * * * *", pollAlarm, false); // Poll every hour 
+
+  // minute, hour, day of month, month, day of week
+  Cron.create("0 0 * * *", irrAlarm, false); // Irr every day at 00:00
 }
 
 void loop() {
-  String pollCommand;
-  String restCallResponse;
-  int timeToAttempt = 0;
-  String currentTime = timestamp.getLocalTimeStamp();
-  String hour = timestamp.getHours();
-  int minutes = atoi(timestamp.getMinutes().c_str());
-  int seconds = atoi(timestamp.getSeconds().c_str());
-  String frame = "";
-
-  if(minutes == 0 && seconds == 0) {
-    if(sendedHour != hour){
-      Serial.println("Polling to SPA...");
-      if(currentTime.substring(11,19) == "00:00:00"){
-        pollCommand = restCall.getWeightAndRain(String(IRR_COMMAND));
-        timeToAttempt = 60000;
-      } else {
-        pollCommand = POLL_COMMAND;
-        timeToAttempt = 15000;
-      }    
-      logger.info(0, "Sending " + pollCommand + " to SPA.");
-      String pollResponse = atFunctions.sendP2PPacket(Serial2, pollCommand);
-      String listeningResponse = atFunctions.sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
-      boolean frameReceived = false;
-      long actualMilis = millis();
-      Serial.print("Waiting response:");
-      while (!frameReceived){
-        Serial.print(".");
-        delay(200);
-        if (Serial2.available() > 0) {
-          String rxData = atFunctions.readSerial(Serial2);
-          rxData = hexFunctions.hexToASCII(rxData.substring(rxData.lastIndexOf(':')+1));
-          Serial.print("\nReceived data: ");
-          Serial.println(rxData);
-          frameReceived = true;
-          frame = rxData;
-          String frameLog = frame;
-          frameLog.replace("\"", "'");
-          logger.info(0, "Received frame data from SPA: '" + frameLog + "'");
-        }
-        if (actualMilis + timeToAttempt <= millis()) {
-          Serial.printf("\nResending %s command...", &pollCommand);
-          logger.error(0, "Not frame received, resending command " + pollCommand + " to SPA.");
-          atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
-          atFunctions.sendP2PPacket(Serial2, pollCommand);
-          atFunctions.sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
-          actualMilis = millis();
-        }
-      }
-      if(!frame.startsWith("ERROR")) {
-        if(!pollCommand.startsWith(IRR_COMMAND)) {
-          restCallResponse = restCall.sendFrameData(frame, STATION_TABLE, 3);
-          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
-        } else {
-          restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-2) + "}", STATION_TABLE, 3);
-          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
-          
-          restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-2) + "}", ETC_TABLE, 3);
-          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
-          
-          restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()), WET_WEIGHT_TABLE, 3);
-          logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
-        }
-        sendedHour = hour;
-        sendedMinutes = minutes;
-      } else {
-        logger.error(0, frame, "ADCSPA");
-      }
-      
-    }
-  }
+  delay(1000);
 }
