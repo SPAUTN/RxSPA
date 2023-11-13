@@ -114,7 +114,7 @@ void loop() {
   String seconds = timestamp.getSeconds();
 
   // Execute pollAlarm every one hour
-  if (hour != sendedHour) {
+  if (if minutes == "00" && != sendedHour) {
     sendedHour = hour;
     pollAlarm();
   }
