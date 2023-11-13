@@ -1,18 +1,14 @@
 #include <Arduino.h>
-#include <ArduinoJson.h>
 #include <WiFiManager.h>
-#include <HTTPClient.h>
 #include <Utils.hpp>
 #include <esp_sntp.h>
 #include <time.h>
-#include <esp_random.h>
 #include <Logger.hpp>
 #include <RestCall.hpp>
 
-#define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
 
-#define API_URL "https://spa-backend-81f8-dev.fl0.io"
+#define API_URL "https://spautn.1.us-1.fl0.io"
 
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
@@ -20,9 +16,7 @@
 #define ETC "etc"
 #define WET_WEIGHT "wetweight"
 
-WiFiUDP ntpUDP;
 WiFiManager wifiManager;
-HTTPClient http;
 String sendedHour = "xx";
 int sendedMinutes = 0;
 
@@ -62,8 +56,9 @@ void loop() {
   String frame = "";
 
   if(minutes == 0 && seconds == 0) {
-    if(sendedHour != hour){
+    if(sendedHour != hour) {
       Serial.println("Polling to SPA...");
+      Serial.println(currentTime.substring(11,19));
       if(currentTime.substring(11,19) == "00:00:00"){
         pollCommand = restCall.getWeightAndRain(String(IRR_COMMAND));
         timeToAttempt = 60000;
@@ -105,13 +100,13 @@ void loop() {
           restCallResponse = restCall.sendFrameData(frame, STATION_TABLE, 3);
           logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
         } else {
-          restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-2) + "}", STATION_TABLE, 3);
+          restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-1), STATION_TABLE, 3);
           logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
           
-          restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-2) + "}", ETC_TABLE, 3);
+          restCallResponse = restCall.sendFrameData(String(IRR_COMMAND) + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-1) , ETC_TABLE, 3);
           logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
           
-          restCallResponse = restCall.sendFrameData("{" + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()), WET_WEIGHT_TABLE, 3);
+          restCallResponse = restCall.sendFrameData(String(IRR_COMMAND) + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()), WET_WEIGHT_TABLE, 3);
           logger.log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
         }
         sendedHour = hour;
