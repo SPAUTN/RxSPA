@@ -21,7 +21,7 @@ class Logger {
          * @param user The user to authenticate on the host
          * @param pass The password to authenticate on the host
         */
-        void config(String logHost, String user, String pass);
+        void config(String logHost, String user, String pass, int attempts = 3);
 
         /**
          * @brief Log a message to the backend
@@ -46,5 +46,6 @@ class Logger {
         String user;
         String pass;
         HTTPClient http;
+        int attempts;
 };
 #endif

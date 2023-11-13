@@ -1,18 +1,14 @@
 #include <Arduino.h>
-#include <ArduinoJson.h>
 #include <WiFiManager.h>
-#include <HTTPClient.h>
 #include <Utils.hpp>
 #include <esp_sntp.h>
 #include <time.h>
-#include <esp_random.h>
 #include <Logger.hpp>
 #include <RestCall.hpp>
 
-#define utcOffsetInSeconds 10800
 #define POOL_NTP_URL "pool.ntp.org"
 
-#define API_URL "https://spa-backend-81f8-dev.fl0.io"
+#define API_URL "https://spautn.1.us-1.fl0.io"
 
 #define DB_USER "serviceesp"
 #define DB_PASS "Spautn2023pf"
@@ -20,9 +16,7 @@
 #define ETC "etc"
 #define WET_WEIGHT "wetweight"
 
-WiFiUDP ntpUDP;
 WiFiManager wifiManager;
-HTTPClient http;
 String sendedHour = "xx";
 String sendedDay = "xx";
 int sendedMinutes = 0;
