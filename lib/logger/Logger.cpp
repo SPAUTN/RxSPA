@@ -25,8 +25,12 @@ int Logger::log(int httpcode, String message, String level, String source){
             Serial.print("Logger bodyRequest: ");
             Serial.println(bodyRequest);
             Serial.printf("Attempt nº: %d.\n", n_attempt);
-            Serial.println("Response to request: " + this -> http.getString());
             httpResponseCode = this -> http.POST(bodyRequest);
+            if(httpResponseCode != 201) {
+                Serial.printf("ERROR: %d\n - Reattempting...", httpResponseCode);
+            } else {
+                Serial.println("Response to request: " + this -> http.getString());
+            }
             this -> http.end();
         } while(n_attempt <= (this -> attempts) && httpResponseCode != 201);
     } catch (const std::exception& e) {
