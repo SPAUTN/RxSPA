@@ -48,7 +48,7 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
             if(httpCode != 201) {
                 Serial.printf("ERROR: %d\n - Reattempting...",httpCode);
             }
-        } while (n_attemp > attempts && httpCode != 201);
+        } while (n_attemp <= attempts && httpCode != 201);
         this -> http.end();
         this -> setResponseCode(httpCode);
         this -> setDebugLevel( httpCode == 201 ? INFO_LEVEL : ERROR_LEVEL );
