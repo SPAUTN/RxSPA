@@ -68,10 +68,10 @@ void sendPollCommand(String pollCommand, Logger *logger, int timeToAttempt) {
       restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-2) + "<", STATION_TABLE, 3);
       logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
       
-      restCallResponse = restCall.sendFrameData(">IRR" + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-2) + "<", ETC_TABLE, 3);
+      restCallResponse = restCall.sendFrameData(">IRR+" + frame.substring(frame.indexOf(ETC), frame.indexOf(WET_WEIGHT)-2) + "<", ETC_TABLE, 3);
       logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
       
-      restCallResponse = restCall.sendFrameData(">IRR+" + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()-1) + "<", WET_WEIGHT_TABLE, 3);
+      restCallResponse = restCall.sendFrameData(">IRR+" + frame.substring(frame.indexOf(WET_WEIGHT), frame.length()-1) + "<", WET_WEIGHT_TABLE, 3);
       logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
     }
   } else {
@@ -112,16 +112,17 @@ void loop() {
   String hour = timestamp.getHours();
   String minutes = timestamp.getMinutes();
   String seconds = timestamp.getSeconds();
-
+  
+  // Execute irrAlarm once a day at 00 hs
+  if (hour == "00" && sendedDay != day) {
+    sendedDay = day;
+    sendedHour = hour;
+    irrAlarm();
+  }
+  
   // Execute pollAlarm every one hour
   if (minutes == "00" && hour != sendedHour) {
     sendedHour = hour;
     pollAlarm();
-  }
-
-  // Execute irrAlarm once a day at 00 hs
-  if (hour == "00" && sendedDay != day) {
-    sendedDay = day;
-    irrAlarm();
   }
 }
