@@ -71,7 +71,7 @@ void sendPollCommand(String pollCommand, Logger *logger, int timeToAttempt) {
       restCallResponse = restCall.sendFrameData(">IRR" + frame.substring(frame.indexOf(ETC)-1, frame.indexOf(WET_WEIGHT)-2) + "<", ETC_TABLE, 3);
       logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
       
-      restCallResponse = restCall.sendFrameData(">IRR" + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()), WET_WEIGHT_TABLE, 3);
+      restCallResponse = restCall.sendFrameData(">IRR+" + frame.substring(frame.indexOf(WET_WEIGHT)-1, frame.length()-1) + "<", WET_WEIGHT_TABLE, 3);
       logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
     }
   } else {
