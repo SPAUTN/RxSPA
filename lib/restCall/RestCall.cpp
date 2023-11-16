@@ -73,6 +73,11 @@ String RestCall::getWeightAndRain(String command) {
     this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
     
     int httpCode = this -> http.GET();
+    String httpResponse = this -> http.getString();
+
+    Serial.printf("HTTP Response code: %d\n", httpCode);
+    Serial.print("HTTP Response: ");
+    Serial.println(httpResponse);
 
     if (httpCode == 200) {
         String responseBody = http.getString();
