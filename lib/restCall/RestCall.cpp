@@ -79,10 +79,7 @@ String RestCall::getWeightAndRain(String command) {
             n_attempt++;
             int httpCode = this -> http.GET();
             Serial.printf("HTTP Response code: %d\n", httpCode);
-            String httpResponse = this -> http.getString();
-            Serial.print("HTTP Response: ");
-            Serial.println(httpResponse);
-
+          
             if (httpCode == 200) {
                 String responseBody = this -> http.getString();
                 Serial.print("Query received: ");
