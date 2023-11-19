@@ -68,6 +68,7 @@ String RestCall::getWeightAndRain(String command) {
     HTTPClient http;
     int n_attempt = 0;
     int attempts = 4;
+    int httpCode;
     String wetweightAndRainValues = "";
 
         this -> http.clearAllCookies();
@@ -77,7 +78,7 @@ String RestCall::getWeightAndRain(String command) {
 
         do {
             n_attempt++;
-            int httpCode = this -> http.GET();
+            httpCode = this -> http.GET();
             Serial.printf("HTTP Response code: %d\n", httpCode);
           
             if (httpCode == 200) {

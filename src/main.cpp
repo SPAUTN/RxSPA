@@ -84,7 +84,7 @@ void pollAlarm() {
 }
 
 void irrAlarm() {
-  sendPollCommand(restCall.getWeightAndRain(IRR_COMMAND), &logger, 10000);
+  sendPollCommand(restCall.getWeightAndRain(IRR_COMMAND), &logger, 50000);
 }
 
 
@@ -114,7 +114,7 @@ void loop() {
   String seconds = timestamp.getSeconds();
   
   // Execute irrAlarm once a day at 00 hs
-  if (hour == "00" && sendedDay != day) {
+  if (hour == "18" && sendedDay != day) {
     sendedDay = day;
     sendedHour = hour;
     irrAlarm();
