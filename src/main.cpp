@@ -5,16 +5,21 @@
 #include <time.h>
 #include <Logger.hpp>
 #include <RestCall.hpp>
+#include "secrets.h"
 
 #define POOL_NTP_URL "pool.ntp.org"
 
 #define API_URL "https://spautn.1.us-1.fl0.io"
 
-#define DB_USER "serviceesp"
-#define DB_PASS "Spautn2023pf"
+#define IRR_HOUR "18"
+#define POLL_MINUTES "00"
 
 #define ETC "etc"
 #define WET_WEIGHT "wwh"
+#define IRR_PREFIX ">IRR+"
+#define FRAME_CLOSE "<"
+#define ERROR "ERROR"
+#define ADCSPA "ADCSPA"
 
 WiFiManager wifiManager;
 String sendedHour = "xx";
@@ -60,22 +65,22 @@ void sendPollCommand(String pollCommand, Logger *logger, int timeToAttempt) {
       actualMilis = millis();
     }
   }
-  if(!frame.startsWith("ERROR")) {
+  if(!frame.startsWith(ERROR)) {
     if(!pollCommand.startsWith(IRR_COMMAND)) {
       restCallResponse = restCall.sendFrameData(frame, STATION_TABLE, 3);
       logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
     } else {
-      restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-2) + "<", STATION_TABLE, 3);
+      restCallResponse = restCall.sendFrameData(frame.substring(0, frame.indexOf(ETC)-2) + FRAME_CLOSE, STATION_TABLE, 3);
       logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
       
-      restCallResponse = restCall.sendFrameData(">IRR+" + frame.substring(frame.indexOf(ETC), frame.indexOf(WET_WEIGHT)-2) + "<", ETC_TABLE, 3);
+      restCallResponse = restCall.sendFrameData(IRR_PREFIX + frame.substring(frame.indexOf(ETC), frame.indexOf(WET_WEIGHT)-2) + FRAME_CLOSE, ETC_TABLE, 3);
       logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
       
-      restCallResponse = restCall.sendFrameData(">IRR+" + frame.substring(frame.indexOf(WET_WEIGHT), frame.length()), WET_WEIGHT_TABLE, 3);
+      restCallResponse = restCall.sendFrameData(IRR_PREFIX + frame.substring(frame.indexOf(WET_WEIGHT), frame.length()), WET_WEIGHT_TABLE, 3);
       logger -> log(restCall.getResponseCode(), restCallResponse, restCall.getDebugLevel(), RXSPA);
     }
   } else {
-    logger -> error(0, frame, "ADCSPA");
+    logger -> error(0, frame, ADCSPA);
   }
 }
 
@@ -114,14 +119,14 @@ void loop() {
   String seconds = timestamp.getSeconds();
   
   // Execute irrAlarm once a day at 00 hs
-  if (hour == "18" && sendedDay != day) {
+  if (hour.equals(IRR_HOUR) && !sendedDay.equals(day)) {
     sendedDay = day;
     sendedHour = hour;
     irrAlarm();
   }
   
   // Execute pollAlarm every one hour
-  if (minutes == "00" && hour != sendedHour) {
+  if (minutes.equals(POLL_MINUTES) && !hour.equals(sendedHour)) {
     sendedHour = hour;
     pollAlarm();
   }
