@@ -9,7 +9,7 @@
 
 #define INSERT_CONTEXT "/insert"
 #define LOG_CONTEXT "/log"
-#define ETCRAIN_CONTEXT "/etcrain"
+#define ETCRAIN_CONTEXT "/etc"
 
 #define ERROR_LEVEL "ERROR"
 #define INFO_LEVEL "INFORMATION"
