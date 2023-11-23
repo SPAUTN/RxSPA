@@ -89,7 +89,7 @@ void pollAlarm() {
 }
 
 void irrAlarm() {
-  sendPollCommand(restCall.getWeightAndRain(IRR_COMMAND), &logger, 50000);
+  sendPollCommand(restCall.getWeight(IRR_COMMAND), &logger, 50000);
 }
 
 
