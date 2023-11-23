@@ -33,7 +33,7 @@ class RestCall {
          * @param command The command to send to the backend
          * @return String The response of the backend
         */
-        String getWeightAndRain(String command);
+        String getWeight(String command);
         
         /**
          * @brief Send a frame to the backend

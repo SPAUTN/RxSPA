@@ -64,11 +64,12 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
     return log_message + "http response code: " + String(httpCode) + " on attempts: " + String(n_attemp);
 }
 
-String RestCall::getWeightAndRain(String command) {
+String RestCall::getWeight(String command) {
     HTTPClient http;
     int n_attempt = 0;
     int attempts = 4;
     int httpCode;
+    double wetweight = -1;
     String wetweightAndRainValues = "";
 
         this -> http.clearAllCookies();
@@ -85,13 +86,11 @@ String RestCall::getWeightAndRain(String command) {
                 String responseBody = this -> http.getString();
                 Serial.print("Query received: ");
                 Serial.println(responseBody);
-                const size_t capacity = JSON_OBJECT_SIZE(2) + 40;
+                const size_t capacity = JSON_OBJECT_SIZE(1) + 40;
                 DynamicJsonDocument doc(capacity);
                 deserializeJson(doc, responseBody);
-                double wetweight = doc["wetweight"];
-                double cumulative_rain = doc["cumulative_rain"];
-                wetweightAndRainValues = String(wetweight, 2) + ";" + String(cumulative_rain, 2);
-                Serial.println(wetweightAndRainValues);
+                wetweight = doc["wetweight"];
+                Serial.println(wetweight);
             } else {
                 Serial.printf("ERROR: %d - Reattempting...", httpCode);
             }
@@ -101,5 +100,5 @@ String RestCall::getWeightAndRain(String command) {
         this -> setResponseCode(httpCode);
         this -> setDebugLevel(httpCode == 200 ? INFO_LEVEL : ERROR_LEVEL);
         
-    return command + ";" + wetweightAndRainValues + ";";
+    return command + ";" + wetweight + ";";
 }
