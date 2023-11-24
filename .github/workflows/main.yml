@@ -18,6 +18,12 @@ jobs:
       - name: Setup PlatformIO
         uses: n-vr/setup-platformio-action@v1
       
+      # Create secrets.h
+      - name: Create secrets.h
+        run: |
+          echo '#define DB_USER "${{ secrets.DB_USER }}"' > src/secrets.h
+          echo '#define DB_PASS "${{ secrets.DB_PASS }}"' >> src/secrets.h
+      
       # Build the PlatformIO project
       - name: Build PlatformIO project
         run: pio run

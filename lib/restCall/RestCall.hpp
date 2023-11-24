@@ -9,7 +9,7 @@
 
 #define INSERT_CONTEXT "/insert"
 #define LOG_CONTEXT "/log"
-#define ETCRAIN_CONTEXT "/etcrain"
+#define ETCRAIN_CONTEXT "/etc"
 
 #define ERROR_LEVEL "ERROR"
 #define INFO_LEVEL "INFORMATION"
@@ -33,7 +33,7 @@ class RestCall {
          * @param command The command to send to the backend
          * @return String The response of the backend
         */
-        String getWeightAndRain(String command);
+        String getWeight(String command);
         
         /**
          * @brief Send a frame to the backend
