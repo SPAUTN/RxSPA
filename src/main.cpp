@@ -9,7 +9,7 @@
 
 #define POOL_NTP_URL "pool.ntp.org"
 
-#define API_URL "https://spautn.1.us-1.fl0.io"
+#define API_URL "https://backend-spa.onrender.com"
 
 #define IRR_HOUR "18"
 #define POLL_MINUTES "00"
