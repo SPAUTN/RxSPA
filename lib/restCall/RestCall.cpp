@@ -66,7 +66,6 @@ String RestCall::sendFrameData(String frame, String table, int attempts){
 }
 
 String RestCall::getWeight(String command) {
-    HTTPClient http;
     int n_attempt = 0;
     int attempts = 4;
     int httpCode;
@@ -102,4 +101,18 @@ String RestCall::getWeight(String command) {
         this -> setDebugLevel(httpCode == 200 ? INFO_LEVEL : ERROR_LEVEL);
         
     return command + ";" + wetweight + ";";
+}
+
+String RestCall::ping(int attempts) {
+    int n_attempt = 0;
+    int httpCode = 0;
+    this -> http.clearAllCookies();
+    this -> http.begin(this->apiUrl + String(PING_CONTEXT));
+    this -> http.addHeader("Content-Type", "application/json");
+    this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
+    do {
+        httpCode = this -> http.GET();
+        n_attempt++;
+    } while(n_attempt <= attempts && httpCode != 200);
+
 }
