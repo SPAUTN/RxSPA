@@ -4,6 +4,7 @@ void RestCall::config(String apiUrl, String dbUser, String dbPass) {
     this -> apiUrl = apiUrl;
     this -> dbUser = dbUser;
     this -> dbPass = dbPass;
+    this -> http.setTimeout(60000);
 }
 
 void RestCall::setDebugLevel(String debugLevel) {
