@@ -123,6 +123,11 @@ void loop() {
   String hour = timestamp.getHours();
   String minutes = timestamp.getMinutes();
   String seconds = timestamp.getSeconds();
+
+  if (minutes.equals("55")) {
+    restCall.ping(5);
+    delay(60000);
+  }
   
   // Execute irrAlarm once a day at 00 hs
   if (hour.equals(IRR_HOUR) && !sendedDay.equals(day)) {
