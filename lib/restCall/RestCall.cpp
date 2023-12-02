@@ -111,8 +111,11 @@ String RestCall::ping(int attempts) {
     this -> http.addHeader("Content-Type", "application/json");
     this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
     do {
+        Serial.printf("Ping attempt nº: %d.\n", n_attempt);
         httpCode = this -> http.GET();
+        Serial.printf("HTTP Response code: %d\n", httpCode);
         n_attempt++;
     } while(n_attempt <= attempts && httpCode != 200);
-
+    
+    return http.getString();
 }

@@ -125,7 +125,7 @@ void loop() {
   String seconds = timestamp.getSeconds();
 
   if (minutes.equals("55")) {
-    restCall.ping(5);
+    Serial.printf("Ping response: %s\n", restCall.ping(5));
     delay(60000);
   }
   
