@@ -10,6 +10,7 @@
 #define INSERT_CONTEXT "/insert"
 #define LOG_CONTEXT "/log"
 #define ETCRAIN_CONTEXT "/etc"
+#define PING_CONTEXT "/ping"
 
 #define ERROR_LEVEL "ERROR"
 #define INFO_LEVEL "INFORMATION"
@@ -44,6 +45,12 @@ class RestCall {
          * @return String The response of the backend
         */
         String sendFrameData(String frame, String table, int attempts);
+
+        /**
+         * @brief Send a ping to the backend for up the server
+         * 
+        */
+        String ping(int attempts);
 
         /**
          * @brief Set the debug level

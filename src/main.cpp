@@ -9,7 +9,7 @@
 
 #define POOL_NTP_URL "pool.ntp.org"
 
-#define API_URL "https://spautn.1.us-1.fl0.io"
+#define API_URL "https://backend-spa.onrender.com"
 
 #define IRR_HOUR "18"
 #define POLL_MINUTES "00"
@@ -32,7 +32,8 @@ ATFunctions atFunctions;
 HexFunctions hexFunctions;
 Timestamp timestamp;
 
-void sendPollCommand(String pollCommand, Logger *logger, int timeToAttempt) {
+void sendPollCommand(String pollCommand, Logger *logger, int timeToAttempt, int attempts = 5) {
+  int currentAttempt = 1;
   String frame = "";
   String restCallResponse;
   Serial.println("Polling to SPA...");
@@ -42,7 +43,7 @@ void sendPollCommand(String pollCommand, Logger *logger, int timeToAttempt) {
   boolean frameReceived = false;
   long actualMilis = millis();
   Serial.print("Waiting response:");
-  while (!frameReceived){
+  while (!frameReceived && currentAttempt < attempts){
     Serial.print(".");
     delay(200);
     if (Serial2.available() > 0) {
@@ -58,7 +59,12 @@ void sendPollCommand(String pollCommand, Logger *logger, int timeToAttempt) {
     }
     if (actualMilis + timeToAttempt <= millis()) {
       Serial.printf("\nResending %s command...", &pollCommand);
-      logger -> error(0, "Not frame received, resending command " + pollCommand + " to SPA.");
+      logger -> error(0, "Not frame received, resending command " + pollCommand + " to SPA." + " Attempt: " + String(currentAttempt));
+      currentAttempt++;
+      if (currentAttempt >= attempts) {
+        Serial.println("\nMax attempts reached.");
+        logger -> error(0, "Max attempts reached. Not frame received from SPA.");
+      }
       atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_TX_SET);
       atFunctions.sendP2PPacket(Serial2, pollCommand);
       atFunctions.sendATCommand(Serial2, AT_SEMICONTINUOUS_PRECV_CONFIG_SET);
@@ -117,6 +123,11 @@ void loop() {
   String hour = timestamp.getHours();
   String minutes = timestamp.getMinutes();
   String seconds = timestamp.getSeconds();
+
+  if (minutes.equals("55")) {
+    Serial.printf("Ping response: '%s'\n", restCall.ping(5));
+    delay(60000);
+  }
   
   // Execute irrAlarm once a day at 00 hs
   if (hour.equals(IRR_HOUR) && !sendedDay.equals(day)) {
