@@ -70,35 +70,34 @@ String RestCall::getWeight(String command) {
     int attempts = 4;
     int httpCode;
     double wetweight = -1;
-    String wetweightAndRainValues = "";
 
-        this -> http.clearAllCookies();
-        this -> http.begin(this->apiUrl + String(ETCRAIN_CONTEXT));
-        this -> http.addHeader("Content-Type", "application/json");
-        this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
+    this -> http.clearAllCookies();
+    this -> http.begin(this->apiUrl + String(ETCRAIN_CONTEXT));
+    this -> http.addHeader("Content-Type", "application/json");
+    this -> http.setAuthorization(this -> dbUser.c_str(), this -> dbPass.c_str());
 
-        do {
-            n_attempt++;
-            httpCode = this -> http.GET();
-            Serial.printf("HTTP Response code: %d\n", httpCode);
-          
-            if (httpCode == 200) {
-                String responseBody = this -> http.getString();
-                Serial.print("Query received: ");
-                Serial.println(responseBody);
-                const size_t capacity = JSON_OBJECT_SIZE(1) + 40;
-                DynamicJsonDocument doc(capacity);
-                deserializeJson(doc, responseBody);
-                wetweight = doc["wetweight"];
-                Serial.println(wetweight);
-            } else {
-                Serial.printf("ERROR: %d - Reattempting...", httpCode);
-            }
-        } while (n_attempt <= attempts && httpCode != 200);
+    do {
+        n_attempt++;
+        httpCode = this -> http.GET();
+        Serial.printf("HTTP Response code: %d\n", httpCode);
+        
+        if (httpCode == 200) {
+            String responseBody = this -> http.getString();
+            Serial.print("Query received: ");
+            Serial.println(responseBody);
+            const size_t capacity = JSON_OBJECT_SIZE(1) + 40;
+            DynamicJsonDocument doc(capacity);
+            deserializeJson(doc, responseBody);
+            wetweight = doc["wetweight"];
+            Serial.println(wetweight);
+        } else {
+            Serial.printf("ERROR: %d - Reattempting...", httpCode);
+        }
+    } while (n_attempt <= attempts && httpCode != 200);
 
-        this -> http.end();
-        this -> setResponseCode(httpCode);
-        this -> setDebugLevel(httpCode == 200 ? INFO_LEVEL : ERROR_LEVEL);
+    this -> http.end();
+    this -> setResponseCode(httpCode);
+    this -> setDebugLevel(httpCode == 200 ? INFO_LEVEL : ERROR_LEVEL);
         
     return command + ";" + wetweight + ";";
 }
