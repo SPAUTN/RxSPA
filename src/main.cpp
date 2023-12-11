@@ -101,16 +101,17 @@ void irrAlarm() {
 
 void setup() {
   // Internal clock
-  sntp_setoperatingmode(SNTP_OPMODE_POLL);
-  sntp_setservername(0, POOL_NTP_URL);
-  sntp_init();
-  sntp_sync_time(0);
 
   Serial.begin(115200);
   Serial2.begin(115200);
   wifiManager.autoConnect();
   logger.config(String(API_URL) + String(LOG_CONTEXT), String(DB_USER), String(DB_PASS));
   restCall.config(String(API_URL), String(DB_USER), String(DB_PASS));
+
+  sntp_setoperatingmode(SNTP_OPMODE_POLL);
+  sntp_setservername(0, POOL_NTP_URL);
+  sntp_init();
+  sntp_sync_time(0);
 
   String atCommandResetResponse = atFunctions.sendATCommand(Serial2, AT_RESET);
   String atConfigSetP2PResponse = atFunctions.sendATCommand(Serial2, AT_P2P_CONFIG_SET);
@@ -125,7 +126,8 @@ void loop() {
   String seconds = timestamp.getSeconds();
 
   if (minutes.equals("55")) {
-    Serial.printf("Ping response: '%s'\n", restCall.ping(5));
+    Serial.print("Ping response: ");
+    Serial.println(restCall.ping(5));
     delay(60000);
   }
   
