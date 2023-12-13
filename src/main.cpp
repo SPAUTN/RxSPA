@@ -128,6 +128,8 @@ void loop() {
   if (minutes.equals("55")) {
     Serial.print("Ping response: ");
     Serial.println(restCall.ping(5));
+    Serial.print("Current timestamp: ");
+    Serial.println(timestamp.getLocalTimeStamp());
     delay(60000);
   }
   
