@@ -11,7 +11,7 @@
 
 #define API_URL "https://backend-spa.onrender.com"
 
-#define IRR_HOUR "18"
+#define IRR_HOUR "03"
 #define POLL_MINUTES "00"
 
 #define ETC "etc"
